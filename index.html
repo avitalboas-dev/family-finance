@@ -325,8 +325,9 @@ const ALL_CATS = [
   'Groceries','Eating Out','Transport','Shopping','Subscriptions',
   'Health','Kids','Home','Income','Savings','Entertainment','Travel','Other'
 ];
-const STORE_KEY = 'revolut_cat_v5';
-const PAGE_SIZE = 50;
+const STORE_KEY    = 'revolut_cat_v5';
+const TX_STORE_KEY = 'revolut_tx_v1';
+const PAGE_SIZE    = 50;
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var allTx        = [];
@@ -341,6 +342,19 @@ var sortDir      = 'desc';
 
 // load saved overrides — try repo file first, fall back to localStorage
 try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(ignore) {}
+
+// restore saved transactions from previous session
+(function restoreTxs() {
+  try {
+    var saved = localStorage.getItem(TX_STORE_KEY);
+    if (!saved) return;
+    var txs = JSON.parse(saved);
+    if (!txs || !txs.length) return;
+    allTx = txs;
+    buildPeriodPicker(txs);
+    renderDashboard(getViewTxs());
+  } catch(ignore) {}
+})();
 
 function persistOverrides() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(catOverrides)); } catch(ignore) {}
@@ -477,6 +491,7 @@ function parseCSV(text) {
     allTx = txs;
     activeCat = 'All';
     shownCount = PAGE_SIZE;
+    try { localStorage.setItem(TX_STORE_KEY, JSON.stringify(txs)); } catch(ignore) {}
     buildPeriodPicker(txs);
     renderDashboard(getViewTxs());
 
@@ -976,6 +991,7 @@ function importOverrides(ev) {
 
 // ─── RESET ────────────────────────────────────────────────────────────────────
 function doReset() {
+  try { localStorage.removeItem(TX_STORE_KEY); } catch(ignore) {}
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('upload-section').style.display = 'flex';
   document.getElementById('date-controls').style.display = 'none';
