@@ -269,6 +269,7 @@
 
     <div class="panel panel-full">
       <h3>Money <em>flow</em> over time</h3>
+      <p style="font-size:0.62rem;color:var(--ink2);margin:-12px 0 20px;letter-spacing:0.04em;">Widen your period to compare months at a glance.</p>
       <div class="month-bars" id="month-bars"></div>
       <div class="month-labels" id="month-labels"></div>
       <div class="chart-legend">
@@ -512,7 +513,10 @@ function buildPeriodPicker(txs) {
   var months = Object.keys(seen).sort().reverse();
 
   var sel = document.getElementById('period-select');
-  sel.innerHTML = '<option value="all">All time</option><option value="custom">Custom range\u2026</option>';
+  sel.innerHTML = '<option value="all">All time</option>' +
+    '<option value="3m">Last 3 months</option>' +
+    '<option value="6m">Last 6 months</option>' +
+    '<option value="custom">Custom range\u2026</option>';
   for (var m = 0; m < months.length; m++) {
     var parts = months[m].split('-');
     var label = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1).toLocaleString('en', {month:'long', year:'numeric'});
@@ -545,6 +549,13 @@ function applyPeriod() {
 function getViewTxs() {
   var val = document.getElementById('period-select').value;
   if (val === 'all') return allTx;
+  if (val === '3m' || val === '6m') {
+    var months = val === '3m' ? 3 : 6;
+    var cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - months);
+    var from = cutoff.toISOString().slice(0, 10);
+    return allTx.filter(function(t) { return t.date.slice(0, 10) >= from; });
+  }
   if (val === 'custom') {
     var from = document.getElementById('date-from').value;
     var to   = document.getElementById('date-to').value;
