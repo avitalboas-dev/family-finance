@@ -239,6 +239,7 @@
     <div class="icon">📂</div>
     <h2>Drop your Revolut CSV here</h2>
     <p>Export from Revolut app → Documents &amp; Statements → CSV</p>
+    <p id="cat-load-status" style="margin-top:12px;font-size:0.65rem;color:var(--ink2)"></p>
     <input type="file" id="file-input" accept=".csv">
     <br>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose file</button>
@@ -287,7 +288,7 @@
       <div class="tx-panel-header">
         <h3>Transactions</h3>
         <div class="hdr-btns">
-          <button class="ghost-btn" onclick="exportOverrides()">↓ Export categories</button>
+          <button class="ghost-btn" onclick="exportOverrides()" title="Download and commit to GitHub to share categories">↓ Export &amp; save categories</button>
           <label class="ghost-btn">↑ Import categories
             <input type="file" accept=".json" style="display:none" onchange="importOverrides(event)">
           </label>
@@ -335,12 +336,39 @@ var activeSearch = '';
 var shownCount   = PAGE_SIZE;
 var openDrop     = null;
 
-// load saved overrides
+// load saved overrides — try repo file first, fall back to localStorage
 try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(ignore) {}
 
 function persistOverrides() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(catOverrides)); } catch(ignore) {}
 }
+
+// On startup: try to fetch revolut-categories.json from the same folder (GitHub Pages)
+(function loadRepoCategories() {
+  fetch('revolut-categories.json?nocache=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('not found');
+      return r.json();
+    })
+    .then(function(data) {
+      if (typeof data !== 'object' || Array.isArray(data)) return;
+      var keys = Object.keys(data);
+      var count = 0;
+      for (var i = 0; i < keys.length; i++) {
+        catOverrides[keys[i]] = data[keys[i]];
+        count++;
+      }
+      persistOverrides(); // keep localStorage in sync
+      var el = document.getElementById('cat-load-status');
+      if (el && count > 0) {
+        el.textContent = '\u2713 Loaded ' + count + ' saved categories from repo';
+        el.style.color = 'var(--green)';
+      }
+    })
+    .catch(function() {
+      // silently fall back to localStorage — normal when running locally
+    });
+})();
 
 // ─── FILE UPLOAD ──────────────────────────────────────────────────────────────
 var uploadZone = document.getElementById('upload-zone');
