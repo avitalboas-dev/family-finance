@@ -209,6 +209,36 @@
   .search-count{font-size:0.62rem;color:var(--ink2);margin-bottom:12px;margin-top:-8px;}
   mark{background:#f0d080;color:var(--ink);padding:0 1px;border-radius:1px;}
 
+  /* SETTINGS MODAL */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(26,22,17,0.45);z-index:200;
+    align-items:center;justify-content:center;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--card);border:1.5px solid var(--border);
+    padding:36px 32px;max-width:420px;width:100%;position:relative;
+  }
+  .modal-box h2{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;margin-bottom:6px;}
+  .modal-box h2 em{font-style:italic;color:var(--accent);}
+  .modal-box p{font-size:0.65rem;color:var(--ink2);line-height:1.7;margin-bottom:20px;}
+  .modal-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);display:block;margin-bottom:6px;}
+  .modal-input{
+    width:100%;font-family:'DM Mono',monospace;font-size:0.68rem;
+    padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--ink);
+    margin-bottom:16px;
+  }
+  .modal-input:focus{outline:none;border-color:var(--accent);}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .modal-close{
+    position:absolute;top:14px;right:16px;background:none;border:none;
+    font-size:1rem;cursor:pointer;color:var(--ink2);line-height:1;
+  }
+  .modal-close:hover{color:var(--ink);}
+  .sync-status{font-size:0.6rem;color:var(--ink2);margin-left:auto;align-self:center;transition:color 0.2s;}
+  .sync-status.ok{color:var(--green);}
+  .sync-status.err{color:var(--accent);}
+
   @media(max-width:640px){
     header{padding:18px 20px;}
     .date-controls{margin-left:0;width:100%;}
@@ -221,6 +251,20 @@
 </style>
 </head>
 <body>
+
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeSettings()">✕</button>
+    <h2>GitHub <em>sync</em></h2>
+    <p>Paste a fine-grained Personal Access Token with <strong>Contents: Read and write</strong> access to this repo. It's stored only in your browser — never in the code.</p>
+    <label class="modal-label">Personal Access Token</label>
+    <input type="password" id="gh-token-input" class="modal-input" placeholder="github_pat_…">
+    <div class="modal-actions">
+      <button class="ghost-btn" onclick="clearGhToken()">Clear</button>
+      <button class="upload-btn" style="margin-top:0;padding:8px 20px;font-size:0.68rem" onclick="saveGhToken()">Save</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <h1>Family <em>Finance</em></h1>
@@ -292,7 +336,8 @@
       <div class="tx-panel-header">
         <h3>Transactions</h3>
         <div class="hdr-btns">
-          <button class="ghost-btn" onclick="exportOverrides()" title="Download and commit to GitHub to share categories">↓ Export &amp; save categories</button>
+          <span class="sync-status" id="sync-status"></span>
+          <button class="ghost-btn" onclick="openSettings()">⚙ Sync</button>
           <button class="ghost-btn" onclick="doReset()">↑ Upload new CSV</button>
         </div>
       </div>
@@ -942,6 +987,7 @@ function setCatOverride(ev, key, newCat) {
   }
   catOverrides[key] = newCat;
   persistOverrides();
+  pushCategoriesToGitHub();
   if (openDrop) { openDrop.remove(); openDrop = null; }
   renderDashboard(getViewTxs());
 }
@@ -949,6 +995,82 @@ function setCatOverride(ev, key, newCat) {
 document.addEventListener('click', function() {
   if (openDrop) { openDrop.remove(); openDrop = null; }
 });
+
+// ─── GITHUB SYNC ─────────────────────────────────────────────────────────────
+var GH_OWNER = 'avitalboas-dev';
+var GH_REPO  = 'family-finance';
+var GH_FILE  = 'revolut-categories.json';
+var GH_TOKEN_KEY = 'ff_gh_token';
+
+function openSettings() {
+  var token = localStorage.getItem(GH_TOKEN_KEY) || '';
+  document.getElementById('gh-token-input').value = token ? '••••••••••••••••' : '';
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+function saveGhToken() {
+  var val = document.getElementById('gh-token-input').value.trim();
+  if (val && val !== '••••••••••••••••') {
+    localStorage.setItem(GH_TOKEN_KEY, val);
+  }
+  closeSettings();
+}
+
+function clearGhToken() {
+  localStorage.removeItem(GH_TOKEN_KEY);
+  document.getElementById('gh-token-input').value = '';
+  setSyncStatus('', '');
+}
+
+function setSyncStatus(msg, state) {
+  var el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'sync-status' + (state ? ' ' + state : '');
+}
+
+function pushCategoriesToGitHub() {
+  var token = localStorage.getItem(GH_TOKEN_KEY);
+  if (!token) return;
+
+  var content = JSON.stringify(catOverrides, null, 2);
+  var encoded = btoa(unescape(encodeURIComponent(content)));
+  var apiBase = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_FILE;
+
+  setSyncStatus('Saving…', '');
+
+  fetch(apiBase, {
+    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(meta) {
+    return fetch(apiBase, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Update categories',
+        content: encoded,
+        sha: meta.sha
+      })
+    });
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error(r.status);
+    setSyncStatus('Saved ✓', 'ok');
+    setTimeout(function() { setSyncStatus('', ''); }, 3000);
+  })
+  .catch(function() {
+    setSyncStatus('Sync failed', 'err');
+  });
+}
 
 // ─── EXPORT / IMPORT OVERRIDES ────────────────────────────────────────────────
 function exportOverrides() {
