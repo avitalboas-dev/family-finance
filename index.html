@@ -147,7 +147,9 @@
     font-size:0.58rem;text-transform:uppercase;letter-spacing:0.12em;
     color:var(--ink2);text-align:left;padding:0 0 10px;
     border-bottom:1px solid var(--border);font-weight:400;
+    cursor:pointer;user-select:none;white-space:nowrap;
   }
+  .tx-table th:hover{color:var(--ink);}
   .tx-table td{padding:10px 0;border-bottom:1px solid var(--border);font-size:0.7rem;vertical-align:middle;}
   .tx-table tr:last-child td{border-bottom:none;}
   .tx-date{color:var(--ink2);white-space:nowrap;padding-right:16px;min-width:90px;}
@@ -289,9 +291,6 @@
         <h3>Transactions</h3>
         <div class="hdr-btns">
           <button class="ghost-btn" onclick="exportOverrides()" title="Download and commit to GitHub to share categories">↓ Export &amp; save categories</button>
-          <label class="ghost-btn">↑ Import categories
-            <input type="file" accept=".json" style="display:none" onchange="importOverrides(event)">
-          </label>
           <button class="ghost-btn" onclick="doReset()">↑ Upload new CSV</button>
         </div>
       </div>
@@ -305,10 +304,10 @@
       <table class="tx-table">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th style="text-align:right">Amount</th>
+            <th id="th-date" onclick="setSortCol('date')">Date ↓</th>
+            <th id="th-desc" onclick="setSortCol('desc')">Description</th>
+            <th id="th-category" onclick="setSortCol('category')">Category</th>
+            <th id="th-amount" style="text-align:right" onclick="setSortCol('amount')">Amount</th>
           </tr>
         </thead>
         <tbody id="tx-body"></tbody>
@@ -335,6 +334,8 @@ var activeDir    = 'all'; // 'all' | 'in' | 'out'
 var activeSearch = '';
 var shownCount   = PAGE_SIZE;
 var openDrop     = null;
+var sortCol      = 'date';
+var sortDir      = 'desc';
 
 // load saved overrides — try repo file first, fall back to localStorage
 try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(ignore) {}
@@ -519,6 +520,10 @@ function buildPeriodPicker(txs) {
     opt.textContent = label;
     sel.appendChild(opt);
   }
+  var now = new Date();
+  var currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  if (seen[currentMonth]) sel.value = currentMonth;
+
   document.getElementById('date-controls').style.display = 'flex';
 }
 
@@ -792,9 +797,40 @@ function highlight(text, query) {
     escHtml(text.slice(idx + query.length));
 }
 
+function setSortCol(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    sortCol = col;
+    sortDir = (col === 'date' || col === 'amount') ? 'desc' : 'asc';
+  }
+  var base = getViewTxs();
+  renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
+}
+
+function updateSortHeaders() {
+  var cols   = ['date', 'desc', 'category', 'amount'];
+  var labels = ['Date', 'Description', 'Category', 'Amount'];
+  for (var i = 0; i < cols.length; i++) {
+    var th = document.getElementById('th-' + cols[i]);
+    if (!th) continue;
+    var arrow = sortCol === cols[i] ? (sortDir === 'desc' ? ' ↓' : ' ↑') : '';
+    th.textContent = labels[i] + arrow;
+    if (cols[i] === 'amount') th.style.textAlign = 'right';
+  }
+}
+
 function renderTxs(txs, cur) {
   cur = cur || (txs[0] && txs[0].currency) || 'EUR';
-  var sorted  = txs.slice().sort(function(a,b) { return b.date.localeCompare(a.date); });
+  var sorted = txs.slice().sort(function(a, b) {
+    var av, bv;
+    if (sortCol === 'date')     { return sortDir === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date); }
+    if (sortCol === 'desc')     { av = a.desc.toLowerCase(); bv = b.desc.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    if (sortCol === 'category') { av = a.category.toLowerCase(); bv = b.category.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    if (sortCol === 'amount')   { return sortDir === 'desc' ? b.amount - a.amount : a.amount - b.amount; }
+    return 0;
+  });
+  updateSortHeaders();
   var visible = sorted.slice(0, shownCount);
   var q = activeSearch;
 
