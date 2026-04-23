@@ -17,11 +17,19 @@ A lightweight, single-page finance tracker for Revolut CSV exports. No accounts,
 
 ## Features
 
-- **Spending & income breakdown** by category, with click-through to filter transactions
-- **Monthly flow chart** showing income vs. spending over time
-- **Period selector** — current month (default), last 3 months, last 6 months, all time, or a custom date range
-- **Sortable transactions table** — click any column header to sort by date, description, category, or amount
-- **Category editor** — reassign any transaction's category; changes apply across all matching merchants and sync automatically
+**Overview tab**
+- Spending & income breakdown by category — click any category to filter transactions below
+- Sortable transactions table — click any column header to sort by date, description, category, or amount
+- Category editor — reassign any transaction's category; changes apply across all matching merchants and sync automatically
+- "↗ View trend" button appears when a category is active, jumping to the Trends tab
+
+**Trends tab**
+- Monthly flow chart showing income vs. spending over time
+- Category trend chart — month-by-month spending for a selected category
+
+**Shared**
+- Period selector — current month (default), last 3 months, last 6 months, all time, or a custom date range
+- Transactions remembered between sessions (no re-upload needed)
 
 ---
 
