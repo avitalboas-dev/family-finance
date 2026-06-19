@@ -100,6 +100,17 @@
   .bar-in{background:var(--green);opacity:0.85;}
   .bar-out{background:var(--accent);opacity:0.85;}
   .month-group:hover .bar-in,.month-group:hover .bar-out{opacity:1;}
+  .bar-stacked{flex:1;display:flex;flex-direction:column-reverse;align-items:stretch;position:relative;}
+  .bar-segment{min-height:2px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
+  .month-group:hover .bar-segment{filter:brightness(1.1);}
+  .flow-toggle{display:flex;gap:0;margin-bottom:14px;}
+  .flow-toggle button{
+    font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;
+    padding:5px 14px;background:var(--bg);border:1px solid var(--border);color:var(--ink2);cursor:pointer;
+  }
+  .flow-toggle button:first-child{border-right:none;}
+  .flow-toggle button.ft-active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  .grouped-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;}
   .chart-tooltip{
     display:none;position:absolute;bottom:calc(100% + 10px);
     left:50%;transform:translateX(-50%);
@@ -355,10 +366,14 @@
 
       <div class="panel panel-full">
         <h3>Money <em>flow</em> over time</h3>
-        <p style="font-size:0.62rem;color:var(--ink2);margin:-12px 0 20px;letter-spacing:0.04em;">Widen your period to compare months at a glance.</p>
+        <p style="font-size:0.62rem;color:var(--ink2);margin:-12px 0 14px;letter-spacing:0.04em;">Widen your period to compare months at a glance.</p>
+        <div class="flow-toggle">
+          <button id="ft-all" class="ft-active" onclick="setFlowMode('all')">All</button>
+          <button id="ft-grouped" onclick="setFlowMode('grouped')">Grouped</button>
+        </div>
         <div class="month-bars" id="month-bars"></div>
         <div class="month-labels" id="month-labels"></div>
-        <div class="chart-legend">
+        <div id="flow-legend" class="chart-legend">
           <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>
         </div>
@@ -741,7 +756,25 @@ function renderIncomeCats(txs, cur) {
 }
 
 // ─── FLOW CHART ───────────────────────────────────────────────────────────────
+var flowMode = 'all';
+var CAT_COLORS = [
+  '#c8552a','#3a6b4a','#7a9fc8','#c8a43a','#8a6bbf',
+  '#4aabb8','#c87a55','#6b8a3a','#bf6b8a','#3a7a8a',
+  '#a08040','#5a7abf','#bf5a5a','#4abf8a','#8a5abf'
+];
+
+function setFlowMode(mode) {
+  flowMode = mode;
+  document.getElementById('ft-all').classList.toggle('ft-active', mode === 'all');
+  document.getElementById('ft-grouped').classList.toggle('ft-active', mode === 'grouped');
+  renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
+}
+
 function renderFlow(txs, cur) {
+  window._lastFlowTxs = txs;
+  window._lastFlowCur = cur;
+  if (flowMode === 'grouped') { renderFlowGrouped(txs, cur); return; }
+
   var months = {};
   for (var i = 0; i < txs.length; i++) {
     var t = txs[i];
@@ -754,6 +787,10 @@ function renderFlow(txs, cur) {
   if (keys.length === 0) {
     document.getElementById('month-bars').innerHTML = '';
     document.getElementById('month-labels').innerHTML = '';
+    document.getElementById('flow-legend').className = 'chart-legend';
+    document.getElementById('flow-legend').innerHTML =
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>';
     return;
   }
   var maxVal = 1;
@@ -790,6 +827,88 @@ function renderFlow(txs, cur) {
   }
   document.getElementById('month-bars').innerHTML   = barsHtml;
   document.getElementById('month-labels').innerHTML = labelsHtml;
+  document.getElementById('flow-legend').className = 'chart-legend';
+  document.getElementById('flow-legend').innerHTML =
+    '<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>' +
+    '<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>';
+}
+
+function renderFlowGrouped(txs, cur) {
+  var months = {};
+  var catSet = {};
+  for (var i = 0; i < txs.length; i++) {
+    var t = txs[i];
+    if (t.amount >= 0) continue;
+    var m = t.date.slice(0, 7);
+    var c = t.category || 'Other';
+    if (!months[m]) months[m] = {};
+    months[m][c] = (months[m][c] || 0) + Math.abs(t.amount);
+    catSet[c] = true;
+  }
+  var keys = Object.keys(months).sort();
+  var cats = Object.keys(catSet).sort();
+  var catColor = {};
+  for (var i = 0; i < cats.length; i++) catColor[cats[i]] = CAT_COLORS[i % CAT_COLORS.length];
+
+  if (keys.length === 0) {
+    document.getElementById('month-bars').innerHTML = '';
+    document.getElementById('month-labels').innerHTML = '';
+    document.getElementById('flow-legend').className = 'chart-legend';
+    document.getElementById('flow-legend').innerHTML = '';
+    return;
+  }
+
+  var maxVal = 1;
+  for (var k = 0; k < keys.length; k++) {
+    var total = 0;
+    var mo = months[keys[k]];
+    for (var c in mo) total += mo[c];
+    if (total > maxVal) maxVal = total;
+  }
+
+  var H = 134;
+  var barsHtml = '';
+  var labelsHtml = '';
+  for (var k = 0; k < keys.length; k++) {
+    var key = keys[k];
+    var mo  = months[key] || {};
+    var parts = key.split('-');
+    var lbl = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1).toLocaleString('en', {month:'short'});
+    var total = 0;
+    for (var c in mo) total += mo[c];
+    var totalH = Math.round(total / maxVal * H);
+
+    var segs = '';
+    var tipRows = '';
+    for (var ci = 0; ci < cats.length; ci++) {
+      var cat = cats[ci];
+      var amt = mo[cat] || 0;
+      if (!amt) continue;
+      var segH = Math.max(2, Math.round(amt / maxVal * H));
+      segs += '<div class="bar-segment" style="height:' + segH + 'px;background:' + catColor[cat] + ';opacity:0.85"></div>';
+      tipRows += '<div style="color:' + catColor[cat] + '">' + escHtml(cat) + ' ' + fmtAmt(amt, cur) + '</div>';
+    }
+
+    barsHtml += '<div class="month-group">' +
+      '<div class="bar-stacked" style="height:' + totalH + 'px">' + segs + '</div>' +
+      '<div class="chart-tooltip">' +
+        '<div class="tip-lbl">' + lbl + ' ' + parts[0] + '</div>' +
+        tipRows +
+        '<div class="tip-net" style="border-top:1px solid #383028;padding-top:3px;margin-top:2px">Total ' + fmtAmt(total, cur) + '</div>' +
+      '</div>' +
+    '</div>';
+    labelsHtml += '<div class="month-label">' + lbl + '</div>';
+  }
+
+  document.getElementById('month-bars').innerHTML   = barsHtml;
+  document.getElementById('month-labels').innerHTML = labelsHtml;
+
+  var legendHtml = '';
+  for (var i = 0; i < cats.length; i++) {
+    legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + catColor[cats[i]] + '"></div>' + escHtml(cats[i]) + '</div>';
+  }
+  document.getElementById('flow-legend').className = 'grouped-legend';
+  document.getElementById('flow-legend').innerHTML = legendHtml;
 }
 
 // ─── FILTERS ──────────────────────────────────────────────────────────────────
