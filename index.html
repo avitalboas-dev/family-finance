@@ -103,13 +103,17 @@
   .bar-stacked{flex:1;display:flex;flex-direction:column-reverse;align-items:stretch;position:relative;}
   .bar-segment{min-height:2px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
   .month-group:hover .bar-segment{filter:brightness(1.1);}
-  .flow-toggle{display:flex;gap:0;margin-bottom:14px;}
+  .flow-controls{display:flex;align-items:center;gap:20px;margin-bottom:14px;flex-wrap:wrap;}
+  .flow-toggle{display:flex;gap:0;}
   .flow-toggle button{
     font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;
     padding:5px 14px;background:var(--bg);border:1px solid var(--border);color:var(--ink2);cursor:pointer;
   }
   .flow-toggle button:first-child{border-right:none;}
   .flow-toggle button.ft-active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  .flow-checks{display:flex;gap:14px;}
+  .flow-check{display:flex;align-items:center;gap:6px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);cursor:pointer;user-select:none;}
+  .flow-check-dot{width:8px;height:8px;border-radius:1px;display:inline-block;}
   .grouped-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;}
   .chart-tooltip{
     display:none;position:absolute;bottom:calc(100% + 10px);
@@ -367,16 +371,19 @@
       <div class="panel panel-full">
         <h3>Money <em>flow</em> over time</h3>
         <p style="font-size:0.62rem;color:var(--ink2);margin:-12px 0 14px;letter-spacing:0.04em;">Widen your period to compare months at a glance.</p>
-        <div class="flow-toggle">
-          <button id="ft-all" class="ft-active" onclick="setFlowMode('all')">All</button>
-          <button id="ft-grouped" onclick="setFlowMode('grouped')">Grouped</button>
+        <div class="flow-controls">
+          <div class="flow-toggle">
+            <button id="ft-all" class="ft-active">All</button>
+            <button id="ft-grouped">Grouped</button>
+          </div>
+          <div class="flow-checks">
+            <label class="flow-check"><input type="checkbox" id="fc-in" checked> <span class="flow-check-dot" style="background:var(--green)"></span> In</label>
+            <label class="flow-check"><input type="checkbox" id="fc-out" checked> <span class="flow-check-dot" style="background:var(--accent)"></span> Out</label>
+          </div>
         </div>
         <div class="month-bars" id="month-bars"></div>
         <div class="month-labels" id="month-labels"></div>
-        <div id="flow-legend" class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>
-        </div>
+        <div id="flow-legend" class="chart-legend"></div>
       </div>
 
       <div class="panel panel-full">
@@ -757,11 +764,24 @@ function renderIncomeCats(txs, cur) {
 
 // ─── FLOW CHART ───────────────────────────────────────────────────────────────
 var flowMode = 'all';
+var flowShowIn  = true;
+var flowShowOut = true;
 var CAT_COLORS = [
   '#c8552a','#3a6b4a','#7a9fc8','#c8a43a','#8a6bbf',
   '#4aabb8','#c87a55','#6b8a3a','#bf6b8a','#3a7a8a',
   '#a08040','#5a7abf','#bf5a5a','#4abf8a','#8a5abf'
 ];
+
+function initFlowControls() {
+  document.getElementById('ft-all').addEventListener('click', function() { setFlowMode('all'); });
+  document.getElementById('ft-grouped').addEventListener('click', function() { setFlowMode('grouped'); });
+  document.getElementById('fc-in').addEventListener('change', function() {
+    flowShowIn = this.checked; renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
+  });
+  document.getElementById('fc-out').addEventListener('change', function() {
+    flowShowOut = this.checked; renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
+  });
+}
 
 function setFlowMode(mode) {
   flowMode = mode;
@@ -787,17 +807,14 @@ function renderFlow(txs, cur) {
   if (keys.length === 0) {
     document.getElementById('month-bars').innerHTML = '';
     document.getElementById('month-labels').innerHTML = '';
-    document.getElementById('flow-legend').className = 'chart-legend';
-    document.getElementById('flow-legend').innerHTML =
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>';
+    renderFlowLegendAll();
     return;
   }
   var maxVal = 1;
   for (var k = 0; k < keys.length; k++) {
     var v = months[keys[k]];
-    if (v.in  > maxVal) maxVal = v.in;
-    if (v.out > maxVal) maxVal = v.out;
+    if (flowShowIn  && v.in  > maxVal) maxVal = v.in;
+    if (flowShowOut && v.out > maxVal) maxVal = v.out;
   }
   var H = 134;
   var barsHtml = '';
@@ -811,44 +828,57 @@ function renderFlow(txs, cur) {
     var inH   = Math.round(v.in  / maxVal * H);
     var outH  = Math.round(v.out / maxVal * H);
     var netColor = net >= 0 ? '#7ac99a' : '#e8917a';
-    var netSign  = net >= 0 ? '+' : '\u2013';
+    var netSign  = net >= 0 ? '+' : '–';
 
-    barsHtml += '<div class="month-group">' +
-      '<div class="bar-in"  style="height:' + inH  + 'px"></div>' +
-      '<div class="bar-out" style="height:' + outH + 'px"></div>' +
+    var inBar  = flowShowIn  ? '<div class="bar-in"  style="height:' + inH  + 'px"></div>' : '';
+    var outBar = flowShowOut ? '<div class="bar-out" style="height:' + outH + 'px"></div>' : '';
+
+    var tipIn  = flowShowIn  ? '<div class="tip-in">↑ In &nbsp;&nbsp;' + fmtAmt(v.in,  cur) + '</div>' : '';
+    var tipOut = flowShowOut ? '<div class="tip-out">↓ Out &nbsp;' + fmtAmt(v.out, cur) + '</div>' : '';
+    var tipNet = (flowShowIn && flowShowOut) ? '<div class="tip-net" style="color:' + netColor + '">' + netSign + ' Net &nbsp;' + fmtAmt(Math.abs(net), cur) + '</div>' : '';
+
+    barsHtml += '<div class="month-group">' + inBar + outBar +
       '<div class="chart-tooltip">' +
         '<div class="tip-lbl">' + lbl + ' ' + parts[0] + '</div>' +
-        '<div class="tip-in">\u2191 In &nbsp;&nbsp;' + fmtAmt(v.in,  cur) + '</div>' +
-        '<div class="tip-out">\u2193 Out &nbsp;' + fmtAmt(v.out, cur) + '</div>' +
-        '<div class="tip-net" style="color:' + netColor + '">' + netSign + ' Net &nbsp;' + fmtAmt(Math.abs(net), cur) + '</div>' +
+        tipIn + tipOut + tipNet +
       '</div>' +
     '</div>';
     labelsHtml += '<div class="month-label">' + lbl + '</div>';
   }
   document.getElementById('month-bars').innerHTML   = barsHtml;
   document.getElementById('month-labels').innerHTML = labelsHtml;
-  document.getElementById('flow-legend').className = 'chart-legend';
-  document.getElementById('flow-legend').innerHTML =
-    '<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>' +
-    '<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>';
+  renderFlowLegendAll();
+}
+
+function renderFlowLegendAll() {
+  var leg = document.getElementById('flow-legend');
+  leg.className = 'chart-legend';
+  var html = '';
+  if (flowShowIn)  html += '<div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In</div>';
+  if (flowShowOut) html += '<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Out</div>';
+  leg.innerHTML = html;
 }
 
 function renderFlowGrouped(txs, cur) {
   var months = {};
-  var catSet = {};
+  var inCatSet = {}, outCatSet = {};
   for (var i = 0; i < txs.length; i++) {
     var t = txs[i];
-    if (t.amount >= 0) continue;
     var m = t.date.slice(0, 7);
     var c = t.category || 'Other';
-    if (!months[m]) months[m] = {};
-    months[m][c] = (months[m][c] || 0) + Math.abs(t.amount);
-    catSet[c] = true;
+    if (!months[m]) months[m] = { in: {}, out: {} };
+    if (t.amount > 0) { months[m].in[c]  = (months[m].in[c]  || 0) + t.amount;        inCatSet[c]  = true; }
+    else              { months[m].out[c] = (months[m].out[c] || 0) + Math.abs(t.amount); outCatSet[c] = true; }
   }
-  var keys = Object.keys(months).sort();
-  var cats = Object.keys(catSet).sort();
-  var catColor = {};
-  for (var i = 0; i < cats.length; i++) catColor[cats[i]] = CAT_COLORS[i % CAT_COLORS.length];
+  var keys    = Object.keys(months).sort();
+  var inCats  = Object.keys(inCatSet).sort();
+  var outCats = Object.keys(outCatSet).sort();
+
+  // Assign stable colors: income cats get greens, expense cats use palette
+  var inColor = {}, outColor = {};
+  var greenShades = ['#3a6b4a','#5a9b6a','#2a4b3a','#4a8b5a','#6aab7a'];
+  for (var i = 0; i < inCats.length;  i++) inColor[inCats[i]]   = greenShades[i % greenShades.length];
+  for (var i = 0; i < outCats.length; i++) outColor[outCats[i]] = CAT_COLORS[i % CAT_COLORS.length];
 
   if (keys.length === 0) {
     document.getElementById('month-bars').innerHTML = '';
@@ -860,41 +890,51 @@ function renderFlowGrouped(txs, cur) {
 
   var maxVal = 1;
   for (var k = 0; k < keys.length; k++) {
-    var total = 0;
     var mo = months[keys[k]];
-    for (var c in mo) total += mo[c];
-    if (total > maxVal) maxVal = total;
+    var inTotal = 0, outTotal = 0;
+    for (var c in mo.in)  inTotal  += mo.in[c];
+    for (var c in mo.out) outTotal += mo.out[c];
+    if (flowShowIn  && inTotal  > maxVal) maxVal = inTotal;
+    if (flowShowOut && outTotal > maxVal) maxVal = outTotal;
   }
 
   var H = 134;
-  var barsHtml = '';
-  var labelsHtml = '';
+  var barsHtml = '', labelsHtml = '';
   for (var k = 0; k < keys.length; k++) {
-    var key = keys[k];
-    var mo  = months[key] || {};
+    var key  = keys[k];
+    var mo   = months[key];
     var parts = key.split('-');
-    var lbl = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1).toLocaleString('en', {month:'short'});
-    var total = 0;
-    for (var c in mo) total += mo[c];
-    var totalH = Math.round(total / maxVal * H);
+    var lbl  = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1).toLocaleString('en', {month:'short'});
 
-    var segs = '';
-    var tipRows = '';
-    for (var ci = 0; ci < cats.length; ci++) {
-      var cat = cats[ci];
-      var amt = mo[cat] || 0;
+    var inSegs = '', inTipRows = '', inTotal = 0;
+    for (var ci = 0; ci < inCats.length; ci++) {
+      var cat = inCats[ci], amt = (mo.in[cat] || 0);
       if (!amt) continue;
+      inTotal += amt;
       var segH = Math.max(2, Math.round(amt / maxVal * H));
-      segs += '<div class="bar-segment" style="height:' + segH + 'px;background:' + catColor[cat] + ';opacity:0.85"></div>';
-      tipRows += '<div style="color:' + catColor[cat] + '">' + escHtml(cat) + ' ' + fmtAmt(amt, cur) + '</div>';
+      inSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + inColor[cat] + ';opacity:0.85"></div>';
+      inTipRows += '<div style="color:' + inColor[cat] + '">' + escHtml(cat) + ' ' + fmtAmt(amt, cur) + '</div>';
+    }
+    var outSegs = '', outTipRows = '', outTotal = 0;
+    for (var ci = 0; ci < outCats.length; ci++) {
+      var cat = outCats[ci], amt = (mo.out[cat] || 0);
+      if (!amt) continue;
+      outTotal += amt;
+      var segH = Math.max(2, Math.round(amt / maxVal * H));
+      outSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + outColor[cat] + ';opacity:0.85"></div>';
+      outTipRows += '<div style="color:' + outColor[cat] + '">' + escHtml(cat) + ' ' + fmtAmt(amt, cur) + '</div>';
     }
 
-    barsHtml += '<div class="month-group">' +
-      '<div class="bar-stacked" style="height:' + totalH + 'px">' + segs + '</div>' +
+    var inBar  = flowShowIn  && inTotal  ? '<div class="bar-stacked" style="height:' + Math.round(inTotal/maxVal*H)  + 'px">' + inSegs  + '</div>' : '';
+    var outBar = flowShowOut && outTotal ? '<div class="bar-stacked" style="height:' + Math.round(outTotal/maxVal*H) + 'px">' + outSegs + '</div>' : '';
+
+    var tipIn  = (flowShowIn  && inTotal)  ? '<div style="color:#7ac99a;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">↑ In</div>' + inTipRows  + '<div class="tip-in">Total ' + fmtAmt(inTotal, cur) + '</div>' : '';
+    var tipOut = (flowShowOut && outTotal) ? '<div style="color:#e8917a;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">↓ Out</div>' + outTipRows + '<div class="tip-out">Total ' + fmtAmt(outTotal, cur) + '</div>' : '';
+
+    barsHtml += '<div class="month-group">' + inBar + outBar +
       '<div class="chart-tooltip">' +
         '<div class="tip-lbl">' + lbl + ' ' + parts[0] + '</div>' +
-        tipRows +
-        '<div class="tip-net" style="border-top:1px solid #383028;padding-top:3px;margin-top:2px">Total ' + fmtAmt(total, cur) + '</div>' +
+        tipIn + tipOut +
       '</div>' +
     '</div>';
     labelsHtml += '<div class="month-label">' + lbl + '</div>';
@@ -903,12 +943,12 @@ function renderFlowGrouped(txs, cur) {
   document.getElementById('month-bars').innerHTML   = barsHtml;
   document.getElementById('month-labels').innerHTML = labelsHtml;
 
+  var leg = document.getElementById('flow-legend');
+  leg.className = 'grouped-legend';
   var legendHtml = '';
-  for (var i = 0; i < cats.length; i++) {
-    legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + catColor[cats[i]] + '"></div>' + escHtml(cats[i]) + '</div>';
-  }
-  document.getElementById('flow-legend').className = 'grouped-legend';
-  document.getElementById('flow-legend').innerHTML = legendHtml;
+  if (flowShowIn)  for (var i = 0; i < inCats.length;  i++) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + inColor[inCats[i]]   + '"></div>' + escHtml(inCats[i])  + '</div>';
+  if (flowShowOut) for (var i = 0; i < outCats.length; i++) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + outColor[outCats[i]] + '"></div>' + escHtml(outCats[i]) + '</div>';
+  leg.innerHTML = legendHtml;
 }
 
 // ─── FILTERS ──────────────────────────────────────────────────────────────────
@@ -1235,6 +1275,7 @@ function setCatOverride(ev, key, newCat) {
 document.addEventListener('click', function() {
   if (openDrop) { openDrop.remove(); openDrop = null; }
 });
+initFlowControls();
 
 // ─── JSONBIN SYNC ─────────────────────────────────────────────────────────────
 var JB_BIN = '69e9fb5b36566621a8e2bab1';
