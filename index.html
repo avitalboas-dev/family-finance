@@ -277,16 +277,17 @@
   /* ── CAT EDITOR ── */
   .cat-cell{position:relative;}
   .cat-tag{
-    display:inline-flex;align-items:center;gap:4px;
-    padding:3px 8px;background:var(--bg);border:1px solid var(--border);
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 10px;background:var(--bg);border:1.5px solid var(--border2);
     font-size:11px;font-weight:500;
     color:var(--ink2);cursor:pointer;
-    transition:border-color 0.12s,color 0.12s;
+    transition:border-color 0.12s,color 0.12s,background 0.12s,box-shadow 0.12s;
     border-radius:20px;user-select:none;
+    box-shadow:0 1px 3px rgba(0,0,0,0.07);
   }
-  .cat-tag:hover{border-color:var(--accent);color:var(--accent);}
-  .cat-tag.custom{border-color:var(--border2);background:var(--accent-bg);color:var(--accent);}
-  .pencil{font-size:9px;opacity:0.5;}
+  .cat-tag:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);box-shadow:0 2px 6px rgba(0,0,0,0.12);}
+  .cat-tag.custom{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);}
+  .pencil{font-size:11px;opacity:0.6;}
   .cat-dropdown{
     position:absolute;top:calc(100% + 4px);left:0;z-index:100;
     background:var(--card);border:1px solid var(--border2);
@@ -484,8 +485,17 @@ var CAT_META = {
   'Travel':        { color:'#3a7a9a', bg:'#eef4f8' },
   'Other':         { color:'#7a6a55', bg:'#f5f0e8' },
 };
+function hashColor(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  var hue = ((h >>> 0) % 360);
+  return {
+    color: 'hsl(' + hue + ',45%,38%)',
+    bg:    'hsl(' + hue + ',60%,94%)'
+  };
+}
 function catMeta(cat) {
-  return CAT_META[cat] || { color:'#7a6a55', bg:'#f5f0e8' };
+  return CAT_META[cat] || hashColor(cat || 'Other');
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
