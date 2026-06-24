@@ -5,273 +5,327 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Family Finance</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#f5f0e8; --ink:#1a1611; --ink2:#5a5040;
-    --card:#fdfaf5; --border:#d8d0c0;
-    --accent:#c8552a; --green:#3a6b4a;
+    --bg:#f7f4ef; --card:#ffffff; --border:#ece8e0; --border2:#d5cfc5;
+    --ink:#1a1611; --ink2:#7a6a55; --ink3:#b0a090;
+    --accent:#c8552a; --accent-bg:#fef2ec;
+    --green:#3a6b4a; --green-bg:#eaf3de;
+    --r:12px; --r-sm:8px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--ink);font-family:'DM Mono',monospace;min-height:100vh;}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.5;}
 
-
-  /* HEADER */
+  /* ── HEADER ── */
   header{
-    padding:24px 40px 20px;border-bottom:1.5px solid var(--border);
-    display:flex;align-items:center;gap:16px;background:var(--card);flex-wrap:wrap;
+    padding:12px 24px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:12px;background:var(--card);
+    position:sticky;top:0;z-index:10;flex-wrap:wrap;
   }
-  header h1{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:300;letter-spacing:-0.02em;}
-  header h1 em{font-style:italic;color:var(--accent);}
+  .logo-mark{
+    width:30px;height:30px;border-radius:8px;
+    background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .logo-mark svg{width:16px;height:16px;fill:none;stroke:white;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  header h1{font-size:14px;font-weight:600;letter-spacing:-0.01em;}
   .date-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;}
-  .date-controls label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink2);}
+  .date-controls label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);}
   .dc-select{
-    font-family:'DM Mono',monospace;font-size:0.68rem;
-    padding:6px 10px;background:var(--bg);border:1px solid var(--border);color:var(--ink);cursor:pointer;
+    font-family:'Inter',system-ui,sans-serif;font-size:12px;
+    padding:6px 10px;background:var(--bg);border:1px solid var(--border2);
+    border-radius:var(--r-sm);color:var(--ink);cursor:pointer;
   }
   .dc-select:focus{outline:none;border-color:var(--accent);}
   .custom-range{display:none;align-items:center;gap:6px;}
   .custom-range input{
-    font-family:'DM Mono',monospace;font-size:0.65rem;
-    padding:5px 8px;background:var(--bg);border:1px solid var(--border);color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;font-size:12px;
+    padding:6px 8px;background:var(--bg);border:1px solid var(--border2);
+    border-radius:var(--r-sm);color:var(--ink);
   }
   .custom-range input:focus{outline:none;border-color:var(--accent);}
-  .custom-range span{font-size:0.62rem;color:var(--ink2);}
+  .custom-range span{font-size:11px;color:var(--ink2);}
 
-  /* UPLOAD */
-  #upload-section{display:flex;justify-content:center;padding:60px 20px;}
+  /* ── UPLOAD ── */
+  #upload-section{display:flex;justify-content:center;padding:64px 20px;}
   #upload-zone{
-    max-width:500px;width:100%;border:2px dashed var(--border);border-radius:4px;
-    padding:56px 40px;text-align:center;cursor:pointer;
+    max-width:460px;width:100%;border:2px dashed var(--border2);border-radius:var(--r);
+    padding:52px 40px;text-align:center;cursor:pointer;
     transition:border-color 0.2s,background 0.2s;background:var(--card);
   }
-  #upload-zone:hover,#upload-zone.drag-over{border-color:var(--accent);background:#fff9f5;}
-  #upload-zone .icon{font-size:2.5rem;margin-bottom:16px;}
-  #upload-zone h2{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:300;margin-bottom:8px;}
-  #upload-zone p{font-size:0.72rem;color:var(--ink2);line-height:1.6;}
+  #upload-zone:hover,#upload-zone.drag-over{border-color:var(--accent);background:var(--accent-bg);}
+  .upload-icon{
+    width:52px;height:52px;border-radius:14px;background:var(--accent-bg);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+  }
+  .upload-icon svg{width:26px;height:26px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+  #upload-zone h2{font-size:17px;font-weight:600;margin-bottom:8px;letter-spacing:-0.01em;}
+  #upload-zone p{font-size:12px;color:var(--ink2);line-height:1.7;}
   #upload-zone input{display:none;}
   .upload-btn{
-    margin-top:20px;display:inline-block;padding:10px 24px;
-    background:var(--accent);color:white;font-family:'DM Mono',monospace;
-    font-size:0.72rem;letter-spacing:0.08em;border:none;cursor:pointer;text-transform:uppercase;
+    margin-top:22px;display:inline-block;padding:10px 22px;
+    background:var(--accent);color:white;font-family:inherit;
+    font-size:12px;font-weight:500;border:none;cursor:pointer;
+    border-radius:var(--r-sm);transition:opacity 0.15s;
   }
+  .upload-btn:hover{opacity:0.88;}
 
-  /* DASHBOARD */
+  /* ── DASHBOARD ── */
   #dashboard{display:none;}
-  .summary-strip{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1.5px solid var(--border);}
-  .summary-card{padding:22px 32px;border-right:1.5px solid var(--border);}
-  .summary-card:last-child{border-right:none;}
-  .summary-card .label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--ink2);margin-bottom:6px;}
-  .summary-card .amount{font-family:'Fraunces',serif;font-size:1.9rem;font-weight:300;letter-spacing:-0.02em;}
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+    padding:16px 20px 12px;
+  }
+  .summary-card{
+    background:var(--card);border-radius:var(--r);border:1px solid var(--border);
+    padding:16px 18px;
+  }
+  .summary-card .label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);margin-bottom:5px;}
+  .summary-card .amount{font-size:22px;font-weight:600;letter-spacing:-0.02em;}
   .amount.in{color:var(--green);}
   .amount.out{color:var(--accent);}
 
-  /* GRID */
-  .main-grid{display:grid;grid-template-columns:1fr 1fr;}
-  .panel{padding:28px 32px;border-right:1.5px solid var(--border);border-bottom:1.5px solid var(--border);}
-  .panel:nth-child(2n){border-right:none;}
-  .panel-full{grid-column:1/-1;border-right:none;}
-  .panel h3{font-family:'Fraunces',serif;font-size:1rem;font-weight:300;margin-bottom:20px;}
-  .panel h3 em{font-style:italic;color:var(--accent);}
+  /* ── TAB BAR ── */
+  .tab-bar{display:flex;gap:4px;padding:0 20px 14px;}
+  .tab-btn{
+    font-family:inherit;font-size:12px;font-weight:500;
+    padding:7px 16px;background:none;border:1px solid transparent;
+    border-radius:var(--r-sm);cursor:pointer;color:var(--ink2);
+    transition:all 0.15s;
+  }
+  .tab-btn:hover{color:var(--ink);background:var(--card);}
+  .tab-btn.active{color:var(--ink);background:var(--card);border-color:var(--border);}
 
-  /* CATEGORY BARS */
-  .cat-list{display:flex;flex-direction:column;gap:12px;}
-  .cat-row{display:flex;flex-direction:column;gap:5px;cursor:pointer;border-radius:2px;padding:4px 6px;margin:0 -6px;transition:background 0.15s;}
-  .cat-row:hover{background:rgba(200,85,42,0.07);}
-  .cat-row:hover .cat-name{color:var(--accent);}
-  .cat-row.inc-row:hover{background:rgba(58,107,74,0.07);}
-  .cat-row.inc-row:hover .cat-name{color:var(--green);}
-  .cat-row:hover .drill-hint{opacity:1;}
-  .cat-meta{display:flex;justify-content:space-between;align-items:baseline;}
-  .cat-name{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;}
-  .cat-amount{font-size:0.72rem;color:var(--ink2);}
-  .drill-hint{opacity:0;font-size:0.6rem;color:var(--accent);margin-left:4px;transition:opacity 0.15s;}
-  .inc-row .drill-hint{color:var(--green);}
-  .bar-track{height:5px;background:var(--border);border-radius:2px;overflow:hidden;}
-  .bar-fill{height:100%;border-radius:2px;transition:width 0.8s cubic-bezier(0.16,1,0.3,1);}
-  .s0{background:#c8552a}.s1{background:#3a6b4a}.s2{background:#e8a030}.s3{background:#4a6a9a}
-  .s4{background:#9a4a7a}.s5{background:#5a8a7a}.s6{background:#8a6a3a}.s7{background:#6a5a9a}
-  .i0{background:#3a6b4a}.i1{background:#5a9a6a}.i2{background:#2a5a3a}.i3{background:#7aba8a}
+  /* ── CONTENT WRAP + GRID ── */
+  .content-wrap{padding:0 20px 28px;}
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .panel{
+    background:var(--card);border-radius:var(--r);border:1px solid var(--border);
+    padding:20px 22px;
+  }
+  .panel-full{grid-column:1/-1;}
+  .panel-title{
+    font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--ink2);margin-bottom:16px;
+  }
 
-  /* FLOW CHART */
-  .month-bars{display:flex;align-items:flex-end;gap:6px;height:160px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+  /* ── CATEGORY ROWS ── */
+  .cat-list{display:flex;flex-direction:column;gap:1px;}
+  .cat-row{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 8px;border-radius:var(--r-sm);cursor:pointer;
+    transition:background 0.12s;
+  }
+  .cat-row:hover{background:var(--bg);}
+  .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .cat-name{font-size:13px;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cat-bar-track{width:56px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0;}
+  .cat-bar-fill{height:100%;border-radius:2px;transition:width 0.7s cubic-bezier(0.16,1,0.3,1);}
+  .cat-amount{font-size:12px;font-weight:500;color:var(--ink2);text-align:right;min-width:58px;font-family:'DM Mono',monospace;}
+  .cat-row:hover .cat-amount{color:var(--ink);}
+  .no-data{font-size:12px;color:var(--ink3);padding:16px 0;}
+
+  /* ── FLOW CHART ── */
+  .flow-hint{font-size:11px;color:var(--ink3);margin:-8px 0 14px;}
+  .flow-controls{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+  .flow-toggle{
+    display:flex;border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;
+  }
+  .flow-toggle button{
+    font-family:inherit;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;
+    padding:5px 14px;background:none;border:none;color:var(--ink2);cursor:pointer;transition:all 0.12s;
+  }
+  .flow-toggle button.ft-active{background:var(--ink);color:white;}
+  .flow-checks{display:flex;gap:14px;}
+  .flow-check{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2);cursor:pointer;user-select:none;}
+  .flow-check-dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .grouped-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;}
+  .month-bars{display:flex;align-items:flex-end;gap:6px;height:280px;padding-top:22px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+  .bar-total{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:4px;font-size:10px;font-family:'DM Mono',monospace;color:var(--ink);white-space:nowrap;z-index:1;}
   .month-group{flex:1;display:flex;gap:3px;align-items:flex-end;position:relative;cursor:default;}
-  .bar-in,.bar-out{flex:1;border-radius:2px 2px 0 0;min-height:3px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
-  .bar-in{background:var(--green);opacity:0.85;}
-  .bar-out{background:var(--accent);opacity:0.85;}
+  .bar-in,.bar-out{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
+  .bar-in{background:var(--green);opacity:0.8;}
+  .bar-out{background:var(--accent);opacity:0.8;}
   .month-group:hover .bar-in,.month-group:hover .bar-out{opacity:1;}
   .bar-stacked{flex:1;display:flex;flex-direction:column-reverse;align-items:stretch;position:relative;}
   .bar-segment{min-height:2px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
-  .month-group:hover .bar-segment{filter:brightness(1.1);}
-  .flow-controls{display:flex;align-items:center;gap:20px;margin-bottom:14px;flex-wrap:wrap;}
-  .flow-toggle{display:flex;gap:0;}
-  .flow-toggle button{
-    font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;
-    padding:5px 14px;background:var(--bg);border:1px solid var(--border);color:var(--ink2);cursor:pointer;
-  }
-  .flow-toggle button:first-child{border-right:none;}
-  .flow-toggle button.ft-active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
-  .flow-checks{display:flex;gap:14px;}
-  .flow-check{display:flex;align-items:center;gap:6px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);cursor:pointer;user-select:none;}
-  .flow-check-dot{width:8px;height:8px;border-radius:1px;display:inline-block;}
-  .grouped-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;}
+  .month-group:hover .bar-segment{filter:brightness(1.07);}
+  .month-labels{display:flex;gap:6px;margin-top:8px;}
+  .month-label{flex:1;font-size:10px;text-align:center;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;}
+  .chart-legend{display:flex;gap:14px;margin-top:12px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);}
+  .legend-dot{width:8px;height:8px;border-radius:2px;}
   .chart-tooltip{
-    display:none;position:absolute;bottom:calc(100% + 10px);
+    display:none;position:absolute;bottom:calc(100% + 8px);
     left:50%;transform:translateX(-50%);
-    background:var(--ink);color:var(--bg);
-    padding:9px 13px;font-size:0.63rem;line-height:1.9;
+    background:var(--ink);color:white;
+    padding:8px 12px;font-size:11px;line-height:1.8;
     white-space:nowrap;z-index:20;pointer-events:none;
+    border-radius:var(--r-sm);
   }
   .chart-tooltip::after{
     content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
     border:5px solid transparent;border-top-color:var(--ink);
   }
   .month-group:hover .chart-tooltip{display:block;}
-  .tip-lbl{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:#a09880;}
+  .tip-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:2px;}
   .tip-in{color:#7ac99a;}
   .tip-out{color:#e8917a;}
-  .tip-net{border-top:1px solid #383028;padding-top:3px;margin-top:2px;}
-  .month-labels{display:flex;gap:6px;margin-top:8px;}
-  .month-label{flex:1;font-size:0.58rem;text-align:center;color:var(--ink2);text-transform:uppercase;letter-spacing:0.06em;}
-  .chart-legend{display:flex;gap:16px;margin-top:14px;}
-  .legend-item{display:flex;align-items:center;gap:6px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);}
-  .legend-dot{width:8px;height:8px;border-radius:1px;}
+  .tip-net{border-top:1px solid #333;padding-top:3px;margin-top:2px;}
 
-  /* TX PANEL */
-  .tx-panel-header{display:flex;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
-  .tx-panel-header h3{font-family:'Fraunces',serif;font-size:1rem;font-weight:300;}
-  .hdr-btns{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+  /* ── CAT FILTER CHECKLIST ── */
+  .flow-cat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .flow-cat-header-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);}
+  .flow-cat-actions{display:flex;gap:10px;}
+  .flow-cat-action{font-size:11px;color:var(--ink2);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .flow-cat-action:hover{color:var(--accent);}
+  .flow-cat-list{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:2px;padding:10px;
+    background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
+  }
+  .flow-cat-item{
+    display:flex;align-items:center;gap:7px;padding:5px 7px;
+    border-radius:6px;cursor:pointer;transition:background 0.1s;
+    font-size:12px;color:var(--ink);user-select:none;
+  }
+  .flow-cat-item:hover{background:var(--card);}
+  .flow-cat-item input{cursor:pointer;accent-color:var(--accent);width:13px;height:13px;flex-shrink:0;}
+
+  /* ── TX PANEL ── */
+  .tx-panel-header{display:flex;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .hdr-btns{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:center;}
+  .sync-status{font-size:11px;color:var(--ink2);transition:color 0.2s;}
+  .sync-status.ok{color:var(--green);}
+  .sync-status.err{color:var(--accent);}
   .ghost-btn{
-    padding:6px 14px;background:none;border:1px solid var(--border);
-    font-family:'DM Mono',monospace;font-size:0.6rem;text-transform:uppercase;
-    letter-spacing:0.1em;cursor:pointer;color:var(--ink2);transition:all 0.15s;white-space:nowrap;
+    padding:6px 12px;background:none;border:1px solid var(--border2);
+    font-family:inherit;font-size:11px;font-weight:500;
+    cursor:pointer;color:var(--ink2);transition:all 0.15s;
+    white-space:nowrap;border-radius:var(--r-sm);
   }
   .ghost-btn:hover{border-color:var(--ink);color:var(--ink);}
 
-  .tx-filters{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+  /* ── TX FILTERS ── */
+  .tx-filters{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .filter-btn{
-    padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.6rem;
-    text-transform:uppercase;letter-spacing:0.1em;background:none;
-    border:1px solid var(--border);cursor:pointer;color:var(--ink2);transition:all 0.15s;
+    padding:5px 12px;font-family:inherit;font-size:11px;font-weight:500;
+    background:none;border:1px solid var(--border);cursor:pointer;color:var(--ink2);
+    transition:all 0.12s;border-radius:20px;
   }
-  .filter-btn.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
-  .filter-btn.green-active{background:var(--green) !important;border-color:var(--green) !important;}
-  .filter-btn.red-active{background:var(--accent) !important;border-color:var(--accent) !important;}
-  .filter-sep{width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0;}
+  .filter-btn:hover{border-color:var(--border2);color:var(--ink);}
+  .filter-btn.active{background:var(--ink);color:white;border-color:var(--ink);}
+  .filter-btn.green-active{background:var(--green)!important;border-color:var(--green)!important;color:white!important;}
+  .filter-btn.red-active{background:var(--accent)!important;border-color:var(--accent)!important;color:white!important;}
+  .filter-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0;}
 
+  /* ── SEARCH ── */
+  .search-wrap{
+    display:flex;align-items:center;margin-bottom:14px;
+    border:1px solid var(--border2);border-radius:var(--r-sm);
+    background:var(--bg);transition:border-color 0.15s,background 0.15s;overflow:hidden;
+  }
+  .search-wrap:focus-within{border-color:var(--accent);background:var(--card);}
+  .search-icon{padding:0 10px;font-size:14px;color:var(--ink3);line-height:1;user-select:none;}
+  .search-input{
+    flex:1;padding:9px 0;font-family:inherit;font-size:12px;
+    background:none;border:none;color:var(--ink);outline:none;
+  }
+  .search-input::placeholder{color:var(--ink3);}
+  .search-clear{
+    padding:0 12px;background:none;border:none;cursor:pointer;
+    font-size:12px;color:var(--ink3);line-height:1;transition:color 0.15s;
+  }
+  .search-clear:hover{color:var(--accent);}
+  .search-count{font-size:11px;color:var(--ink2);margin-bottom:10px;margin-top:-6px;}
+  mark{background:#fde68a;color:var(--ink);padding:0 1px;border-radius:2px;}
+
+  /* ── TX TABLE ── */
   .tx-table{width:100%;border-collapse:collapse;}
   .tx-table th{
-    font-size:0.58rem;text-transform:uppercase;letter-spacing:0.12em;
-    color:var(--ink2);text-align:left;padding:0 0 10px;
-    border-bottom:1px solid var(--border);font-weight:400;
+    font-size:10px;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--ink3);text-align:left;padding:0 0 10px;
+    border-bottom:1px solid var(--border);font-weight:500;
     cursor:pointer;user-select:none;white-space:nowrap;
   }
+  .tx-table th:first-child{width:38px;cursor:default;}
   .tx-table th:hover{color:var(--ink);}
-  .tx-table td{padding:10px 0;border-bottom:1px solid var(--border);font-size:0.7rem;vertical-align:middle;}
+  .tx-table th:first-child:hover{color:var(--ink3);}
+  .tx-table td{padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
   .tx-table tr:last-child td{border-bottom:none;}
-  .tx-date{color:var(--ink2);white-space:nowrap;padding-right:16px;min-width:90px;}
-  .tx-desc{max-width:240px;padding-right:12px;}
-  .tx-amt{text-align:right;font-size:0.74rem;white-space:nowrap;}
+  .tx-icon-cell{padding-right:8px!important;width:38px;}
+  .tx-icon{
+    width:28px;height:28px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;flex-shrink:0;
+  }
+  .tx-date{color:var(--ink2);white-space:nowrap;padding-right:14px;min-width:82px;font-size:12px;}
+  .tx-desc{padding-right:10px;max-width:220px;}
+  .tx-amt{text-align:right;font-size:13px;font-weight:500;white-space:nowrap;font-family:'DM Mono',monospace;}
   .tx-amt.credit{color:var(--green);}
   .tx-amt.debit{color:var(--accent);}
-  .more-row td{padding:14px 0 2px;}
+  .more-row td{padding:12px 0 2px;}
   .more-btn{
-    font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;
-    letter-spacing:0.1em;color:var(--ink2);background:none;border:1px solid var(--border);
-    cursor:pointer;padding:6px 16px;transition:all 0.15s;
+    font-family:inherit;font-size:11px;font-weight:500;
+    color:var(--ink2);background:none;border:1px solid var(--border2);
+    cursor:pointer;padding:7px 16px;transition:all 0.15s;border-radius:20px;
   }
   .more-btn:hover{border-color:var(--ink);color:var(--ink);}
 
-  /* CAT EDITOR */
+  /* ── CAT EDITOR ── */
   .cat-cell{position:relative;}
   .cat-tag{
-    display:inline-flex;align-items:center;gap:5px;
-    padding:3px 9px;background:var(--bg);border:1px solid var(--border);
-    font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;
-    color:var(--ink2);cursor:pointer;transition:border-color 0.15s,color 0.15s;user-select:none;
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 8px;background:var(--bg);border:1px solid var(--border);
+    font-size:11px;font-weight:500;
+    color:var(--ink2);cursor:pointer;
+    transition:border-color 0.12s,color 0.12s;
+    border-radius:20px;user-select:none;
   }
   .cat-tag:hover{border-color:var(--accent);color:var(--accent);}
-  .cat-tag.custom{border-color:#b8a888;color:var(--ink);}
-  .pencil{font-size:0.5rem;opacity:0.45;}
+  .cat-tag.custom{border-color:var(--border2);background:var(--accent-bg);color:var(--accent);}
+  .pencil{font-size:9px;opacity:0.5;}
   .cat-dropdown{
     position:absolute;top:calc(100% + 4px);left:0;z-index:100;
-    background:var(--card);border:1.5px solid var(--ink);
-    min-width:170px;box-shadow:3px 3px 0 var(--border);
+    background:var(--card);border:1px solid var(--border2);
+    min-width:170px;border-radius:var(--r);
+    box-shadow:0 4px 20px rgba(0,0,0,0.10);overflow:hidden;
   }
   .cat-option{
-    padding:8px 12px;font-size:0.63rem;text-transform:uppercase;
-    letter-spacing:0.08em;cursor:pointer;transition:background 0.1s;color:var(--ink);
+    padding:8px 14px;font-size:12px;font-weight:500;
+    cursor:pointer;transition:background 0.1s;color:var(--ink);
   }
   .cat-option:hover{background:var(--bg);}
   .cat-option.cur{color:var(--accent);}
 
-  .search-wrap{
-    display:flex;align-items:center;gap:0;margin-bottom:16px;
-    border:1px solid var(--border);background:var(--card);
-    transition:border-color 0.15s;
-  }
-  .search-wrap:focus-within{border-color:var(--ink);}
-  .search-icon{padding:0 10px;font-size:1.1rem;color:var(--ink2);line-height:1;user-select:none;}
-  .search-input{
-    flex:1;padding:8px 0;font-family:'DM Mono',monospace;font-size:0.7rem;
-    background:none;border:none;color:var(--ink);outline:none;
-  }
-  .search-input::placeholder{color:var(--border);}
-  .search-clear{
-    padding:0 12px;background:none;border:none;cursor:pointer;
-    font-size:0.7rem;color:var(--ink2);line-height:1;transition:color 0.15s;
-  }
-  .search-clear:hover{color:var(--accent);}
-  .search-count{font-size:0.62rem;color:var(--ink2);margin-bottom:12px;margin-top:-8px;}
-  mark{background:#f0d080;color:var(--ink);padding:0 1px;border-radius:1px;}
-
-  .sync-status{font-size:0.6rem;color:var(--ink2);margin-left:auto;align-self:center;transition:color 0.2s;}
-  .sync-status.ok{color:var(--green);}
-  .sync-status.err{color:var(--accent);}
-
-  /* TABS */
-  .tab-bar{display:flex;background:var(--card);border-bottom:1.5px solid var(--border);}
-  .tab-btn{
-    font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;
-    letter-spacing:0.12em;padding:14px 28px;background:none;border:none;
-    border-bottom:2px solid transparent;cursor:pointer;color:var(--ink2);
-    transition:all 0.15s;margin-bottom:-1.5px;
-  }
-  .tab-btn:hover{color:var(--ink);}
-  .tab-btn.active{color:var(--ink);border-bottom-color:var(--accent);}
-
-  /* TREND LINK */
+  /* ── TREND LINK ── */
   .trend-link{
-    font-size:0.55rem;color:var(--ink2);opacity:0;transition:opacity 0.15s;
-    cursor:pointer;margin-left:5px;vertical-align:middle;white-space:nowrap;
+    font-size:10px;color:var(--ink3);opacity:0;transition:opacity 0.12s;
+    cursor:pointer;margin-left:4px;vertical-align:middle;white-space:nowrap;
   }
   .cat-row:hover .trend-link{opacity:1;}
   .trend-link:hover{color:var(--accent);}
-  .inc-row:hover .trend-link{color:var(--green);}
 
-  /* CATEGORY TREND CHART */
-  .trend-select-row{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
-  .trend-select-row h3{margin-bottom:0;}
-  .trend-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px;background:var(--accent);opacity:0.85;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
-  .trend-bar:hover{opacity:1;}
-  .no-trend{font-size:0.7rem;color:var(--ink2);padding:32px 0;}
-
+  /* ── RESPONSIVE ── */
   @media(max-width:640px){
-    header{padding:18px 20px;}
+    header{padding:12px 16px;}
     .date-controls{margin-left:0;width:100%;}
-    .summary-strip{grid-template-columns:1fr;}
-    .summary-card{border-right:none;border-bottom:1.5px solid var(--border);}
+    .summary-strip{grid-template-columns:1fr;padding:12px 16px;}
+    .tab-bar{padding:0 16px 12px;}
+    .content-wrap{padding:0 16px 20px;}
     .main-grid{grid-template-columns:1fr;}
-    .panel:nth-child(2n){border-right:none;}
-    .panel,.tx-panel{padding:20px;}
   }
 </style>
 </head>
 <body>
 
-
 <header>
-  <h1>Family <em>Finance</em></h1>
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  </div>
+  <h1>Family Finance</h1>
   <div class="date-controls" id="date-controls" style="display:none">
     <label>Period</label>
     <select class="dc-select" id="period-select" onchange="onPeriodChange()">
@@ -287,10 +341,12 @@
 
 <div id="upload-section">
   <div id="upload-zone">
-    <div class="icon">📂</div>
+    <div class="upload-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
     <h2>Drop your Revolut CSV here</h2>
     <p>Export from Revolut app → Documents &amp; Statements → CSV</p>
-    <p id="cat-load-status" style="margin-top:12px;font-size:0.65rem;color:var(--ink2)"></p>
+    <p id="cat-load-status" style="margin-top:10px;font-size:11px;color:var(--ink2)"></p>
     <input type="file" id="file-input" accept=".csv">
     <br>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose file</button>
@@ -319,26 +375,26 @@
   </div>
 
   <!-- OVERVIEW TAB -->
-  <div id="tab-overview">
+  <div id="tab-overview" class="content-wrap">
     <div class="main-grid">
 
       <div class="panel">
-        <h3>Spending by <em>category</em></h3>
+        <div class="panel-title">Spending by category</div>
         <div id="cat-spend"></div>
       </div>
 
       <div class="panel">
-        <h3>Income by <em>category</em></h3>
+        <div class="panel-title">Income by category</div>
         <div id="cat-income"></div>
       </div>
 
       <div class="panel panel-full" id="tx-panel">
         <div class="tx-panel-header">
-          <h3>Transactions</h3>
+          <div class="panel-title" style="margin-bottom:0">Transactions</div>
           <div class="hdr-btns">
             <span class="sync-status" id="sync-status"></span>
             <button class="ghost-btn" id="trend-shortcut" style="display:none" onclick="drillIntoTrend(activeCat)">↗ View trend</button>
-            <button class="ghost-btn" onclick="doReset()">↑ Upload new CSV</button>
+            <button class="ghost-btn" onclick="doReset()">Upload new CSV</button>
           </div>
         </div>
         <div class="tx-filters" id="tx-filters"></div>
@@ -351,6 +407,7 @@
         <table class="tx-table">
           <thead>
             <tr>
+              <th></th>
               <th id="th-date" onclick="setSortCol('date')">Date ↓</th>
               <th id="th-desc" onclick="setSortCol('desc')">Description</th>
               <th id="th-category" onclick="setSortCol('category')">Category</th>
@@ -365,37 +422,35 @@
   </div>
 
   <!-- TRENDS TAB -->
-  <div id="tab-trends" style="display:none">
+  <div id="tab-trends" style="display:none" class="content-wrap">
     <div class="main-grid">
 
       <div class="panel panel-full">
-        <h3>Money <em>flow</em> over time</h3>
-        <p style="font-size:0.62rem;color:var(--ink2);margin:-12px 0 14px;letter-spacing:0.04em;">Widen your period to compare months at a glance.</p>
+        <div class="panel-title">Money flow over time</div>
+        <p class="flow-hint">Widen your period to compare months at a glance.</p>
         <div class="flow-controls">
           <div class="flow-toggle">
             <button id="ft-all" class="ft-active">All</button>
             <button id="ft-grouped">Grouped</button>
           </div>
-          <div class="flow-checks">
-            <label class="flow-check"><input type="checkbox" id="fc-in" checked> <span class="flow-check-dot" style="background:var(--green)"></span> In</label>
+          <div id="flow-inout-checks" class="flow-checks">
+            <label class="flow-check"><input type="checkbox" id="fc-in"> <span class="flow-check-dot" style="background:var(--green)"></span> In</label>
             <label class="flow-check"><input type="checkbox" id="fc-out" checked> <span class="flow-check-dot" style="background:var(--accent)"></span> Out</label>
           </div>
+        </div>
+        <div id="flow-cat-controls" style="display:none;margin-bottom:14px;">
+          <div class="flow-cat-header">
+            <span class="flow-cat-header-label">Categories</span>
+            <div class="flow-cat-actions">
+              <span class="flow-cat-action" onclick="setCatFilterAll(true)">Select all</span>
+              <span class="flow-cat-action" onclick="setCatFilterAll(false)">None</span>
+            </div>
+          </div>
+          <div id="flow-cat-list" class="flow-cat-list"></div>
         </div>
         <div class="month-bars" id="month-bars"></div>
         <div class="month-labels" id="month-labels"></div>
         <div id="flow-legend" class="chart-legend"></div>
-      </div>
-
-      <div class="panel panel-full">
-        <div class="trend-select-row">
-          <h3>Spending trend — <em id="trend-cat-label">select a category</em></h3>
-          <select class="dc-select" id="trend-cat-select" onchange="onTrendCatChange()">
-            <option value="">Select category…</option>
-          </select>
-        </div>
-        <p style="font-size:0.62rem;color:var(--ink2);margin:-12px 0 20px;letter-spacing:0.04em;">Widen your period to compare months at a glance.</p>
-        <div class="month-bars" id="cat-trend-bars" style="height:140px"></div>
-        <div class="month-labels" id="cat-trend-labels"></div>
       </div>
 
     </div>
@@ -413,23 +468,40 @@ const STORE_KEY    = 'revolut_cat_v5';
 const TX_STORE_KEY = 'revolut_tx_v1';
 const PAGE_SIZE    = 50;
 
+// ─── CATEGORY METADATA (colors + initials for icons) ─────────────────────────
+var CAT_META = {
+  'Groceries':     { color:'#c8a03a', bg:'#fdf5e0' },
+  'Eating Out':    { color:'#c8552a', bg:'#fef2ec' },
+  'Transport':     { color:'#4a6a9a', bg:'#eef2f8' },
+  'Shopping':      { color:'#9a4a7a', bg:'#f8eef4' },
+  'Subscriptions': { color:'#5a7abf', bg:'#eef2fb' },
+  'Health':        { color:'#3a8a6a', bg:'#eef6f2' },
+  'Kids':          { color:'#b06030', bg:'#fdf0e8' },
+  'Home':          { color:'#7a5a9a', bg:'#f4eef8' },
+  'Income':        { color:'#3a6b4a', bg:'#eaf3de' },
+  'Savings':       { color:'#2a5a8a', bg:'#e8f0f8' },
+  'Entertainment': { color:'#8a3a6b', bg:'#f5eef2' },
+  'Travel':        { color:'#3a7a9a', bg:'#eef4f8' },
+  'Other':         { color:'#7a6a55', bg:'#f5f0e8' },
+};
+function catMeta(cat) {
+  return CAT_META[cat] || { color:'#7a6a55', bg:'#f5f0e8' };
+}
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var allTx        = [];
 var catOverrides = {};
 var activeCat    = 'All';
-var activeDir    = 'all'; // 'all' | 'in' | 'out'
+var activeDir    = 'all';
 var activeSearch = '';
 var shownCount   = PAGE_SIZE;
 var openDrop     = null;
 var sortCol      = 'date';
 var sortDir      = 'desc';
 var activeTab    = 'overview';
-var trendCat     = '';
 
-// load saved overrides — try repo file first, fall back to localStorage
 try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(ignore) {}
 
-// restore saved transactions from previous session
 (function restoreTxs() {
   try {
     var saved = localStorage.getItem(TX_STORE_KEY);
@@ -446,7 +518,6 @@ function persistOverrides() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(catOverrides)); } catch(ignore) {}
 }
 
-// On startup: load categories from JSONBin, fall back to repo file
 (function loadCategories() {
   fetch('https://api.jsonbin.io/v3/b/69e9fb5b36566621a8e2bab1/latest', {
     headers: { 'X-Access-Key': '$2a$10$TbGux.P1oGnU9iKotg.vQ.xn0C34/DERAb..0AuacbKfF6S53IP9y' }
@@ -460,12 +531,11 @@ function persistOverrides() {
     persistOverrides();
     var el = document.getElementById('cat-load-status');
     if (el && keys.length > 0) {
-      el.textContent = '\u2713 Loaded ' + keys.length + ' saved categories';
+      el.textContent = '✓ Loaded ' + keys.length + ' saved categories';
       el.style.color = 'var(--green)';
     }
   })
   .catch(function() {
-    // fall back to repo file
     fetch('revolut-categories.json?nocache=' + Date.now())
       .then(function(r) { if (!r.ok) throw new Error('not found'); return r.json(); })
       .then(function(data) {
@@ -525,14 +595,12 @@ function parseCSV(text) {
     var lines = text.trim().split(/\r?\n/);
     if (lines.length < 2) { alert('File appears empty.'); return; }
 
-    // detect delimiter
     var commas    = (lines[0].match(/,/g)  || []).length;
     var semicolons = (lines[0].match(/;/g) || []).length;
     var delim = semicolons > commas ? ';' : ',';
 
     var headers = splitRow(lines[0], delim).map(function(h) { return h.replace(/^"|"$/g,'').toLowerCase().trim(); });
 
-    // find columns
     function findCol() {
       var names = Array.prototype.slice.call(arguments);
       for (var n = 0; n < names.length; n++) {
@@ -571,7 +639,7 @@ function parseCSV(text) {
       var currency = curCol >= 0 && row[curCol] ? row[curCol].replace(/^"|"$/g,'').trim() : 'EUR';
 
       var dir = amt > 0 ? 'in' : 'out';
-      var key     = desc.toLowerCase().trim() + '|' + dir; // desc + direction key
+      var key     = desc.toLowerCase().trim() + '|' + dir;
       var category = catOverrides[key] || csvCat || guessCategory(desc, type);
 
       txs.push({ date: date, desc: desc, amount: amt, category: category, currency: currency, key: key });
@@ -595,9 +663,7 @@ function parseCSV(text) {
 // ─── CATEGORY GUESSING ────────────────────────────────────────────────────────
 function guessCategory(desc, type) {
   var d = (desc + ' ' + type).toLowerCase();
-  // True income sources
   if (/salary|payroll|wages|dividend|pension|benefits/.test(d)) return 'Income';
-  // Merchant categories — works for both purchases AND refunds from that merchant
   if (/supermarket|tesco|lidl|aldi|dunnes|spar|centra|supervalu|grocery/.test(d)) return 'Groceries';
   if (/restaurant|cafe|café|coffee|bar|pub|takeaway|pizza|burger|starbucks|deliveroo|just eat/.test(d)) return 'Eating Out';
   if (/bus|dart|luas|taxi|uber|bolt|parking|petrol|fuel|toll|train/.test(d)) return 'Transport';
@@ -608,7 +674,6 @@ function guessCategory(desc, type) {
   if (/rent|mortgage|utility|gas|electric|broadband|insurance/.test(d)) return 'Home';
   if (/cinema|theatre|sport|gym/.test(d)) return 'Entertainment';
   if (/hotel|airbnb|holiday|flight|ryanair|aer lingus/.test(d)) return 'Travel';
-  // Generic top-ups / cashback with no merchant hint → Other
   return 'Other';
 }
 
@@ -622,7 +687,7 @@ function buildPeriodPicker(txs) {
   sel.innerHTML = '<option value="all">All time</option>' +
     '<option value="3m">Last 3 months</option>' +
     '<option value="6m">Last 6 months</option>' +
-    '<option value="custom">Custom range\u2026</option>';
+    '<option value="custom">Custom range…</option>';
   for (var m = 0; m < months.length; m++) {
     var parts = months[m].split('-');
     var label = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1).toLocaleString('en', {month:'long', year:'numeric'});
@@ -631,9 +696,7 @@ function buildPeriodPicker(txs) {
     opt.textContent = label;
     sel.appendChild(opt);
   }
-  var now = new Date();
-  var currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-  if (seen[currentMonth]) sel.value = currentMonth;
+  sel.value = '3m';
 
   document.getElementById('date-controls').style.display = 'flex';
 }
@@ -687,16 +750,15 @@ function renderDashboard(txs) {
   document.getElementById('total-in').textContent  = fmtAmt(totalIn, cur);
   document.getElementById('total-out').textContent = fmtAmt(Math.abs(totalOut), cur);
   var netEl = document.getElementById('total-net');
-  netEl.textContent = (net >= 0 ? '+' : '\u2013') + fmtAmt(Math.abs(net), cur);
+  netEl.textContent = (net >= 0 ? '+' : '–') + fmtAmt(Math.abs(net), cur);
   netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--accent)';
 
   renderSpendCats(txs, cur);
   renderIncomeCats(txs, cur);
+  buildCatCheckboxes(txs);
   renderFlow(txs, cur);
   renderFilters(txs);
   renderTxs(applyFilters(txs), cur);
-  populateTrendSelect(txs);
-  renderCategoryTrend(txs, cur);
 
   document.getElementById('upload-section').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
@@ -713,22 +775,23 @@ function renderSpendCats(txs, cur) {
   }
   var entries = sortEntries(bycat);
   var max = entries.length ? entries[0][1] : 1;
-  var html = '';
+  var html = '<div class="cat-list">';
   if (entries.length === 0) {
-    html = '<div class="no-data">No spending data for this period</div>';
+    html += '<div class="no-data">No spending data for this period</div>';
   } else {
     for (var i = 0; i < entries.length; i++) {
       var cat = entries[i][0], amt = entries[i][1];
       var pct = (amt / max * 100).toFixed(1);
+      var m = catMeta(cat);
       html += '<div class="cat-row" onclick="drillInto(\'' + escAttr(cat) + '\',\'out\')" title="View ' + escHtml(cat) + ' transactions">' +
-        '<div class="cat-meta">' +
-          '<span class="cat-name">' + escHtml(cat) + '</span>' +
-          '<span class="cat-amount">' + fmtAmt(amt, cur) + ' <span class="drill-hint">\u2192</span></span>' +
-        '</div>' +
-        '<div class="bar-track"><div class="bar-fill s' + (i % 8) + '" style="width:' + pct + '%"></div></div>' +
+        '<div class="cat-dot" style="background:' + m.color + '"></div>' +
+        '<span class="cat-name">' + escHtml(cat) + '</span>' +
+        '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:' + pct + '%;background:' + m.color + '"></div></div>' +
+        '<span class="cat-amount">' + fmtAmt(amt, cur) + '</span>' +
       '</div>';
     }
   }
+  html += '</div>';
   document.getElementById('cat-spend').innerHTML = html;
 }
 
@@ -743,29 +806,31 @@ function renderIncomeCats(txs, cur) {
   }
   var entries = sortEntries(bycat);
   var max = entries.length ? entries[0][1] : 1;
-  var html = '';
+  var html = '<div class="cat-list">';
   if (entries.length === 0) {
-    html = '<div class="no-data">No income data for this period</div>';
+    html += '<div class="no-data">No income data for this period</div>';
   } else {
     for (var i = 0; i < entries.length; i++) {
       var cat = entries[i][0], amt = entries[i][1];
       var pct = (amt / max * 100).toFixed(1);
-      html += '<div class="cat-row inc-row" onclick="drillInto(\'' + escAttr(cat) + '\',\'in\')" title="View ' + escHtml(cat) + ' transactions">' +
-        '<div class="cat-meta">' +
-          '<span class="cat-name">' + escHtml(cat) + '</span>' +
-          '<span class="cat-amount">' + fmtAmt(amt, cur) + ' <span class="drill-hint">\u2192</span></span>' +
-        '</div>' +
-        '<div class="bar-track"><div class="bar-fill i' + (i % 4) + '" style="width:' + pct + '%"></div></div>' +
+      var m = catMeta(cat);
+      html += '<div class="cat-row" onclick="drillInto(\'' + escAttr(cat) + '\',\'in\')" title="View ' + escHtml(cat) + ' transactions">' +
+        '<div class="cat-dot" style="background:' + m.color + '"></div>' +
+        '<span class="cat-name">' + escHtml(cat) + '</span>' +
+        '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:' + pct + '%;background:' + m.color + '"></div></div>' +
+        '<span class="cat-amount">' + fmtAmt(amt, cur) + '</span>' +
       '</div>';
     }
   }
+  html += '</div>';
   document.getElementById('cat-income').innerHTML = html;
 }
 
 // ─── FLOW CHART ───────────────────────────────────────────────────────────────
-var flowMode = 'all';
-var flowShowIn  = true;
+var flowMode    = 'all';
+var flowShowIn  = false;
 var flowShowOut = true;
+var flowCatFilter = {};
 var CAT_COLORS = [
   '#c8552a','#3a6b4a','#7a9fc8','#c8a43a','#8a6bbf',
   '#4aabb8','#c87a55','#6b8a3a','#bf6b8a','#3a7a8a',
@@ -787,6 +852,55 @@ function setFlowMode(mode) {
   flowMode = mode;
   document.getElementById('ft-all').classList.toggle('ft-active', mode === 'all');
   document.getElementById('ft-grouped').classList.toggle('ft-active', mode === 'grouped');
+  document.getElementById('flow-inout-checks').style.display  = 'flex';
+  document.getElementById('flow-cat-controls').style.display  = mode === 'grouped' ? 'block' : 'none';
+  renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
+}
+
+function buildCatCheckboxes(txs) {
+  var inCats = {}, outCats = {};
+  for (var i = 0; i < txs.length; i++) {
+    if (txs[i].amount > 0) inCats[txs[i].category]  = true;
+    else                    outCats[txs[i].category] = true;
+  }
+  var allCats = Object.keys(inCats).concat(Object.keys(outCats).filter(function(c){ return !inCats[c]; })).sort();
+  for (var i = 0; i < allCats.length; i++) {
+    if (flowCatFilter[allCats[i]] === undefined) flowCatFilter[allCats[i]] = true;
+  }
+  var sections = [];
+  var inList  = Object.keys(inCats).sort();
+  var outList = Object.keys(outCats).sort();
+  if (inList.length)  sections.push({ label: 'Income',   cats: inList });
+  if (outList.length) sections.push({ label: 'Expenses', cats: outList });
+
+  var html = '';
+  for (var s = 0; s < sections.length; s++) {
+    for (var i = 0; i < sections[s].cats.length; i++) {
+      var cat = sections[s].cats[i];
+      var m   = catMeta(cat);
+      var chk = flowCatFilter[cat] !== false;
+      html += '<label class="flow-cat-item">' +
+        '<input type="checkbox" data-cat="' + escAttr(cat) + '" ' + (chk ? 'checked' : '') +
+          ' onchange="toggleCatFilter(\'' + escAttr(cat) + '\',this.checked)">' +
+        '<span class="cat-dot" style="background:' + m.color + '"></span>' +
+        escHtml(cat) +
+      '</label>';
+    }
+  }
+  document.getElementById('flow-cat-list').innerHTML = html;
+}
+
+function toggleCatFilter(cat, checked) {
+  flowCatFilter[cat] = checked;
+  renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
+}
+
+function setCatFilterAll(val) {
+  var items = document.querySelectorAll('#flow-cat-list input[type=checkbox]');
+  for (var i = 0; i < items.length; i++) {
+    items[i].checked = val;
+    flowCatFilter[items[i].getAttribute('data-cat')] = val;
+  }
   renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
 }
 
@@ -816,7 +930,7 @@ function renderFlow(txs, cur) {
     if (flowShowIn  && v.in  > maxVal) maxVal = v.in;
     if (flowShowOut && v.out > maxVal) maxVal = v.out;
   }
-  var H = 134;
+  var H = 254;
   var barsHtml = '';
   var labelsHtml = '';
   for (var k = 0; k < keys.length; k++) {
@@ -837,7 +951,10 @@ function renderFlow(txs, cur) {
     var tipOut = flowShowOut ? '<div class="tip-out">↓ Out &nbsp;' + fmtAmt(v.out, cur) + '</div>' : '';
     var tipNet = (flowShowIn && flowShowOut) ? '<div class="tip-net" style="color:' + netColor + '">' + netSign + ' Net &nbsp;' + fmtAmt(Math.abs(net), cur) + '</div>' : '';
 
-    barsHtml += '<div class="month-group">' + inBar + outBar +
+    var totalLabel = flowShowOut ? fmtShort(v.out, cur) : (flowShowIn ? fmtShort(v.in, cur) : '');
+    var totalDiv = totalLabel ? '<div class="bar-total">' + totalLabel + '</div>' : '';
+
+    barsHtml += '<div class="month-group">' + totalDiv + inBar + outBar +
       '<div class="chart-tooltip">' +
         '<div class="tip-lbl">' + lbl + ' ' + parts[0] + '</div>' +
         tipIn + tipOut + tipNet +
@@ -867,14 +984,13 @@ function renderFlowGrouped(txs, cur) {
     var m = t.date.slice(0, 7);
     var c = t.category || 'Other';
     if (!months[m]) months[m] = { in: {}, out: {} };
-    if (t.amount > 0) { months[m].in[c]  = (months[m].in[c]  || 0) + t.amount;        inCatSet[c]  = true; }
+    if (t.amount > 0) { months[m].in[c]  = (months[m].in[c]  || 0) + t.amount;         inCatSet[c]  = true; }
     else              { months[m].out[c] = (months[m].out[c] || 0) + Math.abs(t.amount); outCatSet[c] = true; }
   }
   var keys    = Object.keys(months).sort();
   var inCats  = Object.keys(inCatSet).sort();
   var outCats = Object.keys(outCatSet).sort();
 
-  // Assign stable colors: income cats get greens, expense cats use palette
   var inColor = {}, outColor = {};
   var greenShades = ['#3a6b4a','#5a9b6a','#2a4b3a','#4a8b5a','#6aab7a'];
   for (var i = 0; i < inCats.length;  i++) inColor[inCats[i]]   = greenShades[i % greenShades.length];
@@ -892,13 +1008,13 @@ function renderFlowGrouped(txs, cur) {
   for (var k = 0; k < keys.length; k++) {
     var mo = months[keys[k]];
     var inTotal = 0, outTotal = 0;
-    for (var c in mo.in)  inTotal  += mo.in[c];
-    for (var c in mo.out) outTotal += mo.out[c];
+    for (var c in mo.in)  { if (flowCatFilter[c] !== false) inTotal  += mo.in[c];  }
+    for (var c in mo.out) { if (flowCatFilter[c] !== false) outTotal += mo.out[c]; }
     if (flowShowIn  && inTotal  > maxVal) maxVal = inTotal;
     if (flowShowOut && outTotal > maxVal) maxVal = outTotal;
   }
 
-  var H = 134;
+  var H = 254;
   var barsHtml = '', labelsHtml = '';
   for (var k = 0; k < keys.length; k++) {
     var key  = keys[k];
@@ -909,7 +1025,7 @@ function renderFlowGrouped(txs, cur) {
     var inSegs = '', inTipRows = '', inTotal = 0;
     for (var ci = 0; ci < inCats.length; ci++) {
       var cat = inCats[ci], amt = (mo.in[cat] || 0);
-      if (!amt) continue;
+      if (!amt || flowCatFilter[cat] === false) continue;
       inTotal += amt;
       var segH = Math.max(2, Math.round(amt / maxVal * H));
       inSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + inColor[cat] + ';opacity:0.85"></div>';
@@ -918,7 +1034,7 @@ function renderFlowGrouped(txs, cur) {
     var outSegs = '', outTipRows = '', outTotal = 0;
     for (var ci = 0; ci < outCats.length; ci++) {
       var cat = outCats[ci], amt = (mo.out[cat] || 0);
-      if (!amt) continue;
+      if (!amt || flowCatFilter[cat] === false) continue;
       outTotal += amt;
       var segH = Math.max(2, Math.round(amt / maxVal * H));
       outSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + outColor[cat] + ';opacity:0.85"></div>';
@@ -928,10 +1044,13 @@ function renderFlowGrouped(txs, cur) {
     var inBar  = flowShowIn  && inTotal  ? '<div class="bar-stacked" style="height:' + Math.round(inTotal/maxVal*H)  + 'px">' + inSegs  + '</div>' : '';
     var outBar = flowShowOut && outTotal ? '<div class="bar-stacked" style="height:' + Math.round(outTotal/maxVal*H) + 'px">' + outSegs + '</div>' : '';
 
-    var tipIn  = (flowShowIn  && inTotal)  ? '<div style="color:#7ac99a;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">↑ In</div>' + inTipRows  + '<div class="tip-in">Total ' + fmtAmt(inTotal, cur) + '</div>' : '';
-    var tipOut = (flowShowOut && outTotal) ? '<div style="color:#e8917a;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">↓ Out</div>' + outTipRows + '<div class="tip-out">Total ' + fmtAmt(outTotal, cur) + '</div>' : '';
+    var tipIn  = (flowShowIn  && inTotal)  ? '<div style="color:#7ac99a;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">↑ In</div>' + inTipRows  + '<div class="tip-in">Total ' + fmtAmt(inTotal, cur) + '</div>' : '';
+    var tipOut = (flowShowOut && outTotal) ? '<div style="color:#e8917a;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">↓ Out</div>' + outTipRows + '<div class="tip-out">Total ' + fmtAmt(outTotal, cur) + '</div>' : '';
 
-    barsHtml += '<div class="month-group">' + inBar + outBar +
+    var grpTotal = flowShowOut && outTotal ? fmtShort(outTotal, cur) : (flowShowIn && inTotal ? fmtShort(inTotal, cur) : '');
+    var grpTotalDiv = grpTotal ? '<div class="bar-total">' + grpTotal + '</div>' : '';
+
+    barsHtml += '<div class="month-group">' + grpTotalDiv + inBar + outBar +
       '<div class="chart-tooltip">' +
         '<div class="tip-lbl">' + lbl + ' ' + parts[0] + '</div>' +
         tipIn + tipOut +
@@ -946,8 +1065,8 @@ function renderFlowGrouped(txs, cur) {
   var leg = document.getElementById('flow-legend');
   leg.className = 'grouped-legend';
   var legendHtml = '';
-  if (flowShowIn)  for (var i = 0; i < inCats.length;  i++) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + inColor[inCats[i]]   + '"></div>' + escHtml(inCats[i])  + '</div>';
-  if (flowShowOut) for (var i = 0; i < outCats.length; i++) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + outColor[outCats[i]] + '"></div>' + escHtml(outCats[i]) + '</div>';
+  if (flowShowIn)  for (var i = 0; i < inCats.length;  i++) { if (flowCatFilter[inCats[i]]  !== false) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + inColor[inCats[i]]   + '"></div>' + escHtml(inCats[i])  + '</div>'; }
+  if (flowShowOut) for (var i = 0; i < outCats.length; i++) { if (flowCatFilter[outCats[i]] !== false) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + outColor[outCats[i]] + '"></div>' + escHtml(outCats[i]) + '</div>'; }
   leg.innerHTML = legendHtml;
 }
 
@@ -960,14 +1079,12 @@ function renderFilters(txs) {
   }
   cats.sort(function(a,b) { if(a==='All') return -1; if(b==='All') return 1; return a.localeCompare(b); });
 
-  // Direction toggle
   var dirHtml =
     '<button class="filter-btn dir-btn' + (activeDir === 'all' ? ' active' : '') + '" onclick="filterByDir(\'all\')">All</button>' +
     '<button class="filter-btn dir-btn' + (activeDir === 'in'  ? ' active green-active' : '') + '" onclick="filterByDir(\'in\')">↑ In</button>' +
     '<button class="filter-btn dir-btn' + (activeDir === 'out' ? ' active red-active'   : '') + '" onclick="filterByDir(\'out\')">↓ Out</button>' +
     '<span class="filter-sep"></span>';
 
-  // Category buttons
   var catHtml = '';
   for (var i = 0; i < cats.length; i++) {
     var c = cats[i];
@@ -998,7 +1115,6 @@ function filterByCat(cat) {
   renderTxs(subset, (base[0] && base[0].currency) || 'EUR');
 }
 
-// applies activeDir, activeCat, and activeSearch to a transaction list
 function applyFilters(txs) {
   var result = txs;
   if (activeDir === 'in')  result = result.filter(function(t) { return t.amount > 0; });
@@ -1042,86 +1158,14 @@ function switchTab(tab) {
 }
 
 function drillIntoTrend(cat) {
-  trendCat = cat;
   switchTab('trends');
-  var sel = document.getElementById('trend-cat-select');
-  if (sel) sel.value = cat;
-  var lbl = document.getElementById('trend-cat-label');
-  if (lbl) lbl.textContent = cat;
-  var base = getViewTxs();
-  renderCategoryTrend(base, (base[0] && base[0].currency) || 'EUR');
+  setFlowMode('grouped');
+  var keys = Object.keys(flowCatFilter);
+  for (var i = 0; i < keys.length; i++) flowCatFilter[keys[i]] = false;
+  flowCatFilter[cat] = true;
+  buildCatCheckboxes(window._lastFlowTxs || []);
+  renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function onTrendCatChange() {
-  trendCat = document.getElementById('trend-cat-select').value;
-  var lbl = document.getElementById('trend-cat-label');
-  if (lbl) lbl.textContent = trendCat || 'select a category';
-  var base = getViewTxs();
-  renderCategoryTrend(base, (base[0] && base[0].currency) || 'EUR');
-}
-
-function populateTrendSelect(txs) {
-  var seen = {};
-  for (var i = 0; i < txs.length; i++) {
-    if (txs[i].amount < 0) seen[txs[i].category] = true;
-  }
-  var cats = Object.keys(seen).sort();
-  var sel = document.getElementById('trend-cat-select');
-  var prev = trendCat || sel.value;
-  sel.innerHTML = '<option value="">Select category\u2026</option>';
-  for (var i = 0; i < cats.length; i++) {
-    var opt = document.createElement('option');
-    opt.value = cats[i];
-    opt.textContent = cats[i];
-    if (cats[i] === prev) opt.selected = true;
-    sel.appendChild(opt);
-  }
-  if (prev && seen[prev]) trendCat = prev;
-}
-
-function renderCategoryTrend(txs, cur) {
-  var cat = trendCat || document.getElementById('trend-cat-select').value;
-  var barsEl   = document.getElementById('cat-trend-bars');
-  var labelsEl = document.getElementById('cat-trend-labels');
-  if (!cat) { barsEl.innerHTML = '<div class="no-trend">Select a category above to see its monthly trend.</div>'; labelsEl.innerHTML = ''; return; }
-
-  var months = {};
-  for (var i = 0; i < txs.length; i++) {
-    var t = txs[i];
-    if (t.category !== cat || t.amount >= 0) continue;
-    var m = t.date.slice(0, 7);
-    months[m] = (months[m] || 0) + Math.abs(t.amount);
-  }
-  var keys = Object.keys(months).sort();
-  if (keys.length === 0) {
-    barsEl.innerHTML = '<div class="no-trend">No spending in <strong>' + escHtml(cat) + '</strong> for this period.</div>';
-    labelsEl.innerHTML = '';
-    return;
-  }
-
-  var maxVal = 0;
-  for (var k = 0; k < keys.length; k++) if (months[keys[k]] > maxVal) maxVal = months[keys[k]];
-  var H = 114;
-  var barsHtml = '', labelsHtml = '';
-  for (var k = 0; k < keys.length; k++) {
-    var key = keys[k];
-    var amt = months[key];
-    var parts = key.split('-');
-    var lbl = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1).toLocaleString('en', {month:'short'});
-    var h = Math.round(amt / maxVal * H);
-    barsHtml +=
-      '<div class="month-group">' +
-        '<div class="trend-bar" style="height:' + h + 'px"></div>' +
-        '<div class="chart-tooltip">' +
-          '<div class="tip-lbl">' + lbl + ' ' + parts[0] + '</div>' +
-          '<div class="tip-out">' + fmtAmt(amt, cur) + '</div>' +
-        '</div>' +
-      '</div>';
-    labelsHtml += '<div class="month-label">' + lbl + '</div>';
-  }
-  barsEl.innerHTML   = barsHtml;
-  labelsEl.innerHTML = labelsHtml;
 }
 
 function drillInto(cat, dir) {
@@ -1175,10 +1219,9 @@ function updateSortHeaders() {
 function renderTxs(txs, cur) {
   cur = cur || (txs[0] && txs[0].currency) || 'EUR';
   var sorted = txs.slice().sort(function(a, b) {
-    var av, bv;
     if (sortCol === 'date')     { return sortDir === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date); }
-    if (sortCol === 'desc')     { av = a.desc.toLowerCase(); bv = b.desc.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
-    if (sortCol === 'category') { av = a.category.toLowerCase(); bv = b.category.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    if (sortCol === 'desc')     { var av = a.desc.toLowerCase(), bv = b.desc.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    if (sortCol === 'category') { var av = a.category.toLowerCase(), bv = b.category.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
     if (sortCol === 'amount')   { return sortDir === 'desc' ? b.amount - a.amount : a.amount - b.amount; }
     return 0;
   });
@@ -1186,7 +1229,6 @@ function renderTxs(txs, cur) {
   var visible = sorted.slice(0, shownCount);
   var q = activeSearch;
 
-  // show result count when searching
   var countEl = document.getElementById('search-result-count');
   if (q && countEl) {
     countEl.textContent = sorted.length === 0 ? 'No results' : sorted.length + ' result' + (sorted.length === 1 ? '' : 's');
@@ -1200,22 +1242,25 @@ function renderTxs(txs, cur) {
     var t = visible[i];
     var isCredit  = t.amount > 0;
     var customCls = catOverrides[t.key] ? ' custom' : '';
+    var m = catMeta(t.category);
+    var initial = t.category ? t.category.slice(0,1).toUpperCase() : '?';
     html += '<tr>' +
+      '<td class="tx-icon-cell"><div class="tx-icon" style="background:' + m.bg + ';color:' + m.color + '">' + initial + '</div></td>' +
       '<td class="tx-date">' + t.date.slice(0,10) + '</td>' +
       '<td class="tx-desc">' + highlight(t.desc, q) + '</td>' +
       '<td class="cat-cell" id="cc' + i + '">' +
         '<span class="cat-tag' + customCls + '" onclick="openCatEditor(event,\'' + escAttr(t.key) + '\',' + i + ',\'' + escAttr(t.category) + '\')">' +
-          escHtml(t.category) + ' <span class="pencil">\u270e</span>' +
+          escHtml(t.category) + ' <span class="pencil">✎</span>' +
         '</span>' +
       '</td>' +
       '<td class="tx-amt ' + (isCredit ? 'credit' : 'debit') + '">' +
-        (isCredit ? '+' : '\u2013') + fmtAmt(Math.abs(t.amount), cur) +
+        (isCredit ? '+' : '–') + fmtAmt(Math.abs(t.amount), cur) +
       '</td>' +
     '</tr>';
   }
 
   if (sorted.length > shownCount) {
-    html += '<tr class="more-row"><td colspan="4">' +
+    html += '<tr class="more-row"><td colspan="5">' +
       '<button class="more-btn" onclick="showMoreTxs()">Show more (' + (sorted.length - shownCount) + ' remaining)</button>' +
     '</td></tr>';
   }
@@ -1242,14 +1287,13 @@ function openCatEditor(ev, key, rowIdx, currentCat) {
   for (var i = 0; i < ALL_CATS.length; i++) {
     var c = ALL_CATS[i];
     var isCur = c === currentCat ? ' cur' : '';
-    var check = c === currentCat ? ' \u2713' : '';
+    var check = c === currentCat ? ' ✓' : '';
     html += '<div class="cat-option' + isCur + '" onclick="setCatOverride(event,\'' + escAttr(key) + '\',\'' + escAttr(c) + '\')">' + escHtml(c) + check + '</div>';
   }
   dd.innerHTML = html;
   cell.appendChild(dd);
   openDrop = dd;
 
-  // flip up if near bottom
   requestAnimationFrame(function() {
     var rect = dd.getBoundingClientRect();
     if (rect.bottom > window.innerHeight - 20) {
@@ -1261,7 +1305,6 @@ function openCatEditor(ev, key, rowIdx, currentCat) {
 
 function setCatOverride(ev, key, newCat) {
   ev.stopPropagation();
-  // update every transaction with the same description (key is desc-normalized)
   for (var i = 0; i < allTx.length; i++) {
     if (allTx[i].key === key) allTx[i].category = newCat;
   }
@@ -1359,8 +1402,14 @@ function doReset() {
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
+function fmtShort(n, cur) {
+  var sym = cur === 'EUR' ? '€' : cur === 'GBP' ? '£' : cur === 'USD' ? '$' : (cur || '€');
+  if (n >= 1000) return sym + (n / 1000).toFixed(1) + 'k';
+  return sym + Math.round(n);
+}
+
 function fmtAmt(n, cur) {
-  var sym = cur === 'EUR' ? '\u20ac' : cur === 'GBP' ? '\u00a3' : cur === 'USD' ? '$' : (cur || '\u20ac');
+  var sym = cur === 'EUR' ? '€' : cur === 'GBP' ? '£' : cur === 'USD' ? '$' : (cur || '€');
   return sym + Math.abs(n).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
