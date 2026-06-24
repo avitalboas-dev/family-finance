@@ -294,6 +294,19 @@
     min-width:170px;border-radius:var(--r);
     box-shadow:0 4px 20px rgba(0,0,0,0.10);overflow:hidden;
   }
+  .cat-new-input{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;border-bottom:1px solid var(--border);
+  }
+  .cat-new-input input{
+    flex:1;border:1px solid var(--border2);border-radius:12px;
+    padding:4px 8px;font-size:12px;outline:none;background:var(--bg);color:var(--ink);
+  }
+  .cat-new-input input:focus{border-color:var(--accent);}
+  .cat-new-input button{
+    background:var(--accent);color:#fff;border:none;border-radius:12px;
+    padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;
+  }
   .cat-option{
     padding:8px 14px;font-size:12px;font-weight:500;
     cursor:pointer;transition:background 0.1s;color:var(--ink);
@@ -1293,7 +1306,7 @@ function openCatEditor(ev, key, rowIdx, currentCat) {
   var dd = document.createElement('div');
   dd.className = 'cat-dropdown';
 
-  var html = '';
+  var html = '<div class="cat-new-input" onclick="event.stopPropagation()"><input id="cat-new-field" type="text" placeholder="New category…" onclick="event.stopPropagation()" /><button onclick="addNewCat(event,\'' + escAttr(key) + '\')">Add</button></div>';
   for (var i = 0; i < ALL_CATS.length; i++) {
     var c = ALL_CATS[i];
     var isCur = c === currentCat ? ' cur' : '';
@@ -1301,6 +1314,7 @@ function openCatEditor(ev, key, rowIdx, currentCat) {
     html += '<div class="cat-option' + isCur + '" onclick="setCatOverride(event,\'' + escAttr(key) + '\',\'' + escAttr(c) + '\')">' + escHtml(c) + check + '</div>';
   }
   dd.innerHTML = html;
+  setTimeout(function() { var f = document.getElementById('cat-new-field'); if (f) f.addEventListener('keydown', function(e) { if (e.key === 'Enter') addNewCat(e, key); e.stopPropagation(); }); }, 0);
   cell.appendChild(dd);
   openDrop = dd;
 
@@ -1323,6 +1337,15 @@ function setCatOverride(ev, key, newCat) {
   pushCategoriesToGitHub();
   if (openDrop) { openDrop.remove(); openDrop = null; }
   renderDashboard(getViewTxs());
+}
+
+function addNewCat(ev, key) {
+  ev.stopPropagation();
+  var f = document.getElementById('cat-new-field');
+  var name = f ? f.value.trim() : '';
+  if (!name) return;
+  if (ALL_CATS.indexOf(name) === -1) ALL_CATS.push(name);
+  setCatOverride(ev, key, name);
 }
 
 document.addEventListener('click', function() {
