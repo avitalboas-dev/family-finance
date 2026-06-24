@@ -175,24 +175,17 @@
   .tip-out{color:#e8917a;}
   .tip-net{border-top:1px solid #333;padding-top:3px;margin-top:2px;}
 
-  /* ── CAT FILTER CHECKLIST ── */
-  .flow-cat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-  .flow-cat-header-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);}
-  .flow-cat-actions{display:flex;gap:10px;}
-  .flow-cat-action{font-size:11px;color:var(--ink2);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
-  .flow-cat-action:hover{color:var(--accent);}
-  .flow-cat-list{
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-    gap:2px;padding:10px;
-    background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
-  }
-  .flow-cat-item{
-    display:flex;align-items:center;gap:7px;padding:5px 7px;
-    border-radius:6px;cursor:pointer;transition:background 0.1s;
-    font-size:12px;color:var(--ink);user-select:none;
-  }
-  .flow-cat-item:hover{background:var(--card);}
-  .flow-cat-item input{cursor:pointer;accent-color:var(--accent);width:13px;height:13px;flex-shrink:0;}
+  /* ── LEGEND TOGGLE ── */
+  .chart-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;align-items:center;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);cursor:pointer;user-select:none;padding:2px 4px;border-radius:4px;transition:opacity 0.15s;}
+  .legend-item:hover{background:var(--bg);}
+  .legend-item.legend-off{opacity:0.5;}
+  .legend-item.legend-off .legend-label{text-decoration:line-through;}
+  .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+  .legend-spacer{flex:1;}
+  .legend-actions{display:flex;gap:10px;margin-left:auto;}
+  .legend-action{font-size:11px;color:var(--ink3);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .legend-action:hover{color:var(--accent);}
 
   /* ── TX PANEL ── */
   .tx-panel-header{display:flex;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
@@ -250,12 +243,21 @@
     border-bottom:1px solid var(--border);font-weight:500;
     cursor:pointer;user-select:none;white-space:nowrap;
   }
-  .tx-table th:first-child{width:38px;cursor:default;}
+  .tx-table th:first-child{width:24px;cursor:default;}
   .tx-table th:hover{color:var(--ink);}
   .tx-table th:first-child:hover{color:var(--ink3);}
+  .tx-table th:nth-child(2){width:38px;cursor:default;}
+  .tx-table th:nth-child(2):hover{color:var(--ink3);}
   .tx-table td{padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
   .tx-table tr:last-child td{border-bottom:none;}
   .tx-icon-cell{padding-right:8px!important;width:38px;}
+  .flag-btn{
+    background:none;border:none;cursor:pointer;
+    font-size:15px;color:var(--border2);padding:2px 3px;line-height:1;
+    opacity:0.35;transition:color 0.12s,opacity 0.12s;
+  }
+  .flag-btn:hover{color:var(--accent);opacity:1;}
+  .flag-btn.flagged{color:var(--accent);opacity:1;}
   .tx-icon{
     width:28px;height:28px;border-radius:8px;
     display:inline-flex;align-items:center;justify-content:center;
@@ -422,6 +424,7 @@
           <thead>
             <tr>
               <th></th>
+              <th></th>
               <th id="th-date" onclick="setSortCol('date')">Date ↓</th>
               <th id="th-desc" onclick="setSortCol('desc')">Description</th>
               <th id="th-category" onclick="setSortCol('category')">Category</th>
@@ -452,16 +455,6 @@
             <label class="flow-check"><input type="checkbox" id="fc-out" checked> <span class="flow-check-dot" style="background:var(--accent)"></span> Out</label>
           </div>
         </div>
-        <div id="flow-cat-controls" style="display:none;margin-bottom:14px;">
-          <div class="flow-cat-header">
-            <span class="flow-cat-header-label">Categories</span>
-            <div class="flow-cat-actions">
-              <span class="flow-cat-action" onclick="setCatFilterAll(true)">Select all</span>
-              <span class="flow-cat-action" onclick="setCatFilterAll(false)">None</span>
-            </div>
-          </div>
-          <div id="flow-cat-list" class="flow-cat-list"></div>
-        </div>
         <div class="month-bars" id="month-bars"></div>
         <div class="month-labels" id="month-labels"></div>
         <div id="flow-legend" class="chart-legend"></div>
@@ -480,6 +473,7 @@ const ALL_CATS = [
 ];
 const STORE_KEY    = 'revolut_cat_v5';
 const TX_STORE_KEY = 'revolut_tx_v1';
+const FLAGS_KEY    = 'revolut_flags_v1';
 const PAGE_SIZE    = 50;
 
 // ─── CATEGORY METADATA (colors + initials for icons) ─────────────────────────
@@ -522,6 +516,9 @@ var openDrop     = null;
 var sortCol      = 'date';
 var sortDir      = 'desc';
 var activeTab    = 'overview';
+var activeFlag   = false;
+var txFlags      = {};
+try { txFlags = JSON.parse(localStorage.getItem(FLAGS_KEY) || '{}'); } catch(ignore) {}
 
 try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(ignore) {}
 
@@ -859,6 +856,9 @@ var CAT_COLORS = [
   '#4aabb8','#c87a55','#6b8a3a','#bf6b8a','#3a7a8a',
   '#a08040','#5a7abf','#bf5a5a','#4abf8a','#8a5abf'
 ];
+var GREEN_SHADES = ['#3a6b4a','#5a9b6a','#2a4b3a','#4a8b5a','#6aab7a'];
+var flowInColor  = {};
+var flowOutColor = {};
 
 function initFlowControls() {
   document.getElementById('ft-all').addEventListener('click', function() { setFlowMode('all'); });
@@ -876,54 +876,34 @@ function setFlowMode(mode) {
   document.getElementById('ft-all').classList.toggle('ft-active', mode === 'all');
   document.getElementById('ft-grouped').classList.toggle('ft-active', mode === 'grouped');
   document.getElementById('flow-inout-checks').style.display  = 'flex';
-  document.getElementById('flow-cat-controls').style.display  = mode === 'grouped' ? 'block' : 'none';
   renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
 }
 
 function buildCatCheckboxes(txs) {
-  var inCats = {}, outCats = {};
+  var inCatSet = {}, outCatSet = {};
   for (var i = 0; i < txs.length; i++) {
-    if (txs[i].amount > 0) inCats[txs[i].category]  = true;
-    else                    outCats[txs[i].category] = true;
+    if (txs[i].amount > 0) inCatSet[txs[i].category]  = true;
+    else                    outCatSet[txs[i].category] = true;
   }
-  var allCats = Object.keys(inCats).concat(Object.keys(outCats).filter(function(c){ return !inCats[c]; })).sort();
+  var inCats  = Object.keys(inCatSet).sort();
+  var outCats = Object.keys(outCatSet).sort();
+  flowInColor = {}; flowOutColor = {};
+  for (var i = 0; i < inCats.length;  i++) flowInColor[inCats[i]]   = GREEN_SHADES[i % GREEN_SHADES.length];
+  for (var i = 0; i < outCats.length; i++) flowOutColor[outCats[i]] = CAT_COLORS[i % CAT_COLORS.length];
+  var allCats = Object.keys(inCatSet).concat(Object.keys(outCatSet).filter(function(c){ return !inCatSet[c]; })).sort();
   for (var i = 0; i < allCats.length; i++) {
     if (flowCatFilter[allCats[i]] === undefined) flowCatFilter[allCats[i]] = true;
   }
-  var sections = [];
-  var inList  = Object.keys(inCats).sort();
-  var outList = Object.keys(outCats).sort();
-  if (inList.length)  sections.push({ label: 'Income',   cats: inList });
-  if (outList.length) sections.push({ label: 'Expenses', cats: outList });
-
-  var html = '';
-  for (var s = 0; s < sections.length; s++) {
-    for (var i = 0; i < sections[s].cats.length; i++) {
-      var cat = sections[s].cats[i];
-      var m   = catMeta(cat);
-      var chk = flowCatFilter[cat] !== false;
-      html += '<label class="flow-cat-item">' +
-        '<input type="checkbox" data-cat="' + escAttr(cat) + '" ' + (chk ? 'checked' : '') +
-          ' onchange="toggleCatFilter(\'' + escAttr(cat) + '\',this.checked)">' +
-        '<span class="cat-dot" style="background:' + m.color + '"></span>' +
-        escHtml(cat) +
-      '</label>';
-    }
-  }
-  document.getElementById('flow-cat-list').innerHTML = html;
 }
 
-function toggleCatFilter(cat, checked) {
-  flowCatFilter[cat] = checked;
+function toggleCatFilter(cat) {
+  flowCatFilter[cat] = flowCatFilter[cat] === false;
   renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
 }
 
 function setCatFilterAll(val) {
-  var items = document.querySelectorAll('#flow-cat-list input[type=checkbox]');
-  for (var i = 0; i < items.length; i++) {
-    items[i].checked = val;
-    flowCatFilter[items[i].getAttribute('data-cat')] = val;
-  }
+  var keys = Object.keys(flowCatFilter);
+  for (var i = 0; i < keys.length; i++) flowCatFilter[keys[i]] = val;
   renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
 }
 
@@ -1014,10 +994,9 @@ function renderFlowGrouped(txs, cur) {
   var inCats  = Object.keys(inCatSet).sort();
   var outCats = Object.keys(outCatSet).sort();
 
-  var inColor = {}, outColor = {};
-  var greenShades = ['#3a6b4a','#5a9b6a','#2a4b3a','#4a8b5a','#6aab7a'];
-  for (var i = 0; i < inCats.length;  i++) inColor[inCats[i]]   = greenShades[i % greenShades.length];
-  for (var i = 0; i < outCats.length; i++) outColor[outCats[i]] = CAT_COLORS[i % CAT_COLORS.length];
+  for (var i = 0; i < inCats.length;  i++) if (!flowInColor[inCats[i]])   flowInColor[inCats[i]]   = GREEN_SHADES[i % GREEN_SHADES.length];
+  for (var i = 0; i < outCats.length; i++) if (!flowOutColor[outCats[i]]) flowOutColor[outCats[i]] = CAT_COLORS[i % CAT_COLORS.length];
+  var inColor = flowInColor, outColor = flowOutColor;
 
   if (keys.length === 0) {
     document.getElementById('month-bars').innerHTML = '';
@@ -1086,10 +1065,23 @@ function renderFlowGrouped(txs, cur) {
   document.getElementById('month-labels').innerHTML = labelsHtml;
 
   var leg = document.getElementById('flow-legend');
-  leg.className = 'grouped-legend';
+  leg.className = 'chart-legend';
   var legendHtml = '';
-  if (flowShowIn)  for (var i = 0; i < inCats.length;  i++) { if (flowCatFilter[inCats[i]]  !== false) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + inColor[inCats[i]]   + '"></div>' + escHtml(inCats[i])  + '</div>'; }
-  if (flowShowOut) for (var i = 0; i < outCats.length; i++) { if (flowCatFilter[outCats[i]] !== false) legendHtml += '<div class="legend-item"><div class="legend-dot" style="background:' + outColor[outCats[i]] + '"></div>' + escHtml(outCats[i]) + '</div>'; }
+  if (flowShowIn)  for (var i = 0; i < inCats.length;  i++) {
+    var on = flowCatFilter[inCats[i]] !== false;
+    legendHtml += '<div class="legend-item' + (on ? '' : ' legend-off') + '" onclick="toggleCatFilter(\'' + escAttr(inCats[i]) + '\')">' +
+      '<div class="legend-dot" style="background:' + inColor[inCats[i]] + '"></div>' +
+      '<span class="legend-label">' + escHtml(inCats[i]) + '</span></div>';
+  }
+  if (flowShowOut) for (var i = 0; i < outCats.length; i++) {
+    var on = flowCatFilter[outCats[i]] !== false;
+    legendHtml += '<div class="legend-item' + (on ? '' : ' legend-off') + '" onclick="toggleCatFilter(\'' + escAttr(outCats[i]) + '\')">' +
+      '<div class="legend-dot" style="background:' + outColor[outCats[i]] + '"></div>' +
+      '<span class="legend-label">' + escHtml(outCats[i]) + '</span></div>';
+  }
+  legendHtml += '<div class="legend-spacer"></div><div class="legend-actions">' +
+    '<span class="legend-action" onclick="setCatFilterAll(true)">All</span>' +
+    '<span class="legend-action" onclick="setCatFilterAll(false)">None</span></div>';
   leg.innerHTML = legendHtml;
 }
 
@@ -1114,7 +1106,12 @@ function renderFilters(txs) {
     catHtml += '<button class="filter-btn' + (c === activeCat ? ' active' : '') + '" onclick="filterByCat(\'' + escAttr(c) + '\')">' + escHtml(c) + '</button>';
   }
 
-  document.getElementById('tx-filters').innerHTML = dirHtml + catHtml;
+  var flagCount = 0;
+  for (var i = 0; i < txs.length; i++) { if (txFlags[getTxId(txs[i])]) flagCount++; }
+  var flagHtml = '<span class="filter-sep"></span>' +
+    '<button class="filter-btn' + (activeFlag ? ' active' : '') + '" onclick="toggleFlagFilter()">⚑ Flagged' + (flagCount ? ' (' + flagCount + ')' : '') + '</button>';
+
+  document.getElementById('tx-filters').innerHTML = dirHtml + catHtml + flagHtml;
 
   var shortcut = document.getElementById('trend-shortcut');
   if (shortcut) shortcut.style.display = (activeCat !== 'All') ? 'inline-block' : 'none';
@@ -1152,6 +1149,7 @@ function applyFilters(txs) {
              String(Math.abs(t.amount)).indexOf(q) >= 0;
     });
   }
+  if (activeFlag) result = result.filter(function(t) { return txFlags[getTxId(t)]; });
   return result;
 }
 
@@ -1186,7 +1184,6 @@ function drillIntoTrend(cat) {
   var keys = Object.keys(flowCatFilter);
   for (var i = 0; i < keys.length; i++) flowCatFilter[keys[i]] = false;
   flowCatFilter[cat] = true;
-  buildCatCheckboxes(window._lastFlowTxs || []);
   renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1250,6 +1247,7 @@ function renderTxs(txs, cur) {
   });
   updateSortHeaders();
   var visible = sorted.slice(0, shownCount);
+  window._visibleTxs = visible;
   var q = activeSearch;
 
   var countEl = document.getElementById('search-result-count');
@@ -1267,7 +1265,9 @@ function renderTxs(txs, cur) {
     var customCls = catOverrides[t.key] ? ' custom' : '';
     var m = catMeta(t.category);
     var initial = t.category ? t.category.slice(0,1).toUpperCase() : '?';
+    var isFlagged = !!txFlags[getTxId(t)];
     html += '<tr>' +
+      '<td><button class="flag-btn' + (isFlagged ? ' flagged' : '') + '" onclick="toggleFlag(' + i + ',event)" title="Flag for review">⚑</button></td>' +
       '<td class="tx-icon-cell"><div class="tx-icon" style="background:' + m.bg + ';color:' + m.color + '">' + initial + '</div></td>' +
       '<td class="tx-date">' + t.date.slice(0,10) + '</td>' +
       '<td class="tx-desc">' + highlight(t.desc, q) + '</td>' +
@@ -1283,7 +1283,7 @@ function renderTxs(txs, cur) {
   }
 
   if (sorted.length > shownCount) {
-    html += '<tr class="more-row"><td colspan="5">' +
+    html += '<tr class="more-row"><td colspan="6">' +
       '<button class="more-btn" onclick="showMoreTxs()">Show more (' + (sorted.length - shownCount) + ' remaining)</button>' +
     '</td></tr>';
   }
@@ -1456,6 +1456,29 @@ function escAttr(s) {
 
 function sortEntries(obj) {
   return Object.keys(obj).map(function(k) { return [k, obj[k]]; }).sort(function(a,b) { return b[1]-a[1]; });
+}
+
+// ─── FLAG / VERIFY ────────────────────────────────────────────────────────────
+function getTxId(t) {
+  return t.date.slice(0,10) + '|' + t.amount + '|' + t.desc;
+}
+function toggleFlag(idx, ev) {
+  ev.stopPropagation();
+  var t = (window._visibleTxs || [])[idx];
+  if (!t) return;
+  var id = getTxId(t);
+  if (txFlags[id]) delete txFlags[id]; else txFlags[id] = true;
+  try { localStorage.setItem(FLAGS_KEY, JSON.stringify(txFlags)); } catch(ignore) {}
+  var base = getViewTxs();
+  renderFilters(base);
+  renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
+}
+function toggleFlagFilter() {
+  activeFlag = !activeFlag;
+  shownCount = PAGE_SIZE;
+  var base = getViewTxs();
+  renderFilters(base);
+  renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
 }
 </script>
 </body>
