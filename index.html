@@ -562,9 +562,11 @@ try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catc
   } catch(ignore) {}
   allTx = revolutTx.concat(hapoalimTx);
   if (!allTx.length) return;
-  updateSourceFilter();
-  buildPeriodPicker(allTx);
-  renderDashboard(getViewTxs());
+  try {
+    updateSourceFilter();
+    buildPeriodPicker(allTx);
+    renderDashboard(getViewTxs());
+  } catch(ignore) {}
 })();
 
 function persistOverrides() {
