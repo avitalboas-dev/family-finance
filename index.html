@@ -427,7 +427,8 @@
           <div class="hdr-btns">
             <span class="sync-status" id="sync-status"></span>
             <button class="ghost-btn" id="trend-shortcut" style="display:none" onclick="drillIntoTrend(activeCat)">↗ View trend</button>
-            <button class="ghost-btn" onclick="doReset()">Upload new CSV</button>
+            <button class="ghost-btn" onclick="document.getElementById('file-input').click()">+ Add bank file</button>
+            <button class="ghost-btn" onclick="doReset()">Clear data</button>
           </div>
         </div>
         <div class="tx-filters" id="tx-filters"></div>
