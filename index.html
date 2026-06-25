@@ -380,11 +380,12 @@
     <h2>Drop a bank export here</h2>
     <p>Revolut CSV &nbsp;·&nbsp; Bank Hapoalim Excel (.xlsx)</p>
     <p id="cat-load-status" style="margin-top:10px;font-size:11px;color:var(--ink2)"></p>
-    <input type="file" id="file-input" accept=".csv,.xlsx,.xls">
     <br>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose file</button>
   </div>
 </div>
+
+<input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none">
 
 <div id="dashboard">
   <div class="summary-strip">
