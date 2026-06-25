@@ -490,6 +490,10 @@ const ALL_CATS = [
   'Groceries','Eating Out','Transport','Shopping','Subscriptions',
   'Health','Kids','Home','Income','Savings','Entertainment','Travel','Other'
 ];
+const HAPOALIM_CATS = [
+  'מזון וסופר','אוכל בחוץ','תחבורה','קניות','מנויים',
+  'בריאות','ילדים','בית','הכנסה','חיסכון','בידור','נסיעות','אחר'
+];
 const STORE_KEY         = 'revolut_cat_v5';
 const TX_STORE_KEY      = 'revolut_tx_v1';
 const HAPOALIM_TX_KEY   = 'hapoalim_tx_v1';
@@ -511,6 +515,19 @@ var CAT_META = {
   'Entertainment': { color:'#8a3a6b', bg:'#f5eef2' },
   'Travel':        { color:'#3a7a9a', bg:'#eef4f8' },
   'Other':         { color:'#7a6a55', bg:'#f5f0e8' },
+  'מזון וסופר':   { color:'#c8a03a', bg:'#fdf5e0' },
+  'אוכל בחוץ':    { color:'#c8552a', bg:'#fef2ec' },
+  'תחבורה':       { color:'#4a6a9a', bg:'#eef2f8' },
+  'קניות':        { color:'#9a4a7a', bg:'#f8eef4' },
+  'מנויים':       { color:'#5a7abf', bg:'#eef2fb' },
+  'בריאות':       { color:'#3a8a6a', bg:'#eef6f2' },
+  'ילדים':        { color:'#b06030', bg:'#fdf0e8' },
+  'בית':          { color:'#7a5a9a', bg:'#f4eef8' },
+  'הכנסה':        { color:'#3a6b4a', bg:'#eaf3de' },
+  'חיסכון':       { color:'#2a5a8a', bg:'#e8f0f8' },
+  'בידור':        { color:'#8a3a6b', bg:'#f5eef2' },
+  'נסיעות':       { color:'#3a7a9a', bg:'#eef4f8' },
+  'אחר':          { color:'#7a6a55', bg:'#f5f0e8' },
 };
 function hashColor(str) {
   var h = 0;
@@ -535,7 +552,8 @@ var activeCat    = 'All';
 var activeDir    = 'all';
 var activeSearch = '';
 var shownCount   = PAGE_SIZE;
-var openDrop     = null;
+var openDrop            = null;
+var currentEditorSource = 'revolut';
 var sortCol      = 'date';
 var sortDir      = 'desc';
 var activeTab    = 'overview';
@@ -1467,7 +1485,7 @@ function renderTxs(txs, cur) {
       '<td class="tx-date">' + t.date.slice(0,10) + '</td>' +
       '<td class="tx-desc">' + highlight(t.desc, q) + '</td>' +
       '<td class="cat-cell" id="cc' + i + '">' +
-        '<span class="cat-tag' + customCls + '" onclick="openCatEditor(event,\'' + escAttr(t.key) + '\',' + i + ',\'' + escAttr(t.category) + '\')">' +
+        '<span class="cat-tag' + customCls + '" onclick="openCatEditor(event,\'' + escAttr(t.key) + '\',' + i + ',\'' + escAttr(t.category) + '\',\'' + (t.source || 'revolut') + '\')">' +
           escHtml(t.category) + ' <span class="pencil">✎</span>' +
         '</span>' +
       '</td>' +
@@ -1493,17 +1511,24 @@ function showMoreTxs() {
 }
 
 // ─── CATEGORY EDITOR ─────────────────────────────────────────────────────────
-function openCatEditor(ev, key, rowIdx, currentCat) {
+function getCatList(source) {
+  return source === 'hapoalim' ? HAPOALIM_CATS : ALL_CATS;
+}
+
+function openCatEditor(ev, key, rowIdx, currentCat, source) {
   ev.stopPropagation();
   if (openDrop) { openDrop.remove(); openDrop = null; }
+  currentEditorSource = source || 'revolut';
 
   var cell = document.getElementById('cc' + rowIdx);
   var dd = document.createElement('div');
   dd.className = 'cat-dropdown';
 
-  var html = '<div class="cat-new-input" onclick="event.stopPropagation()"><input id="cat-new-field" type="text" placeholder="New category…" onclick="event.stopPropagation()" /><button onclick="addNewCat(event,\'' + escAttr(key) + '\')">Add</button></div>';
-  for (var i = 0; i < ALL_CATS.length; i++) {
-    var c = ALL_CATS[i];
+  var cats = getCatList(currentEditorSource);
+  var placeholder = currentEditorSource === 'hapoalim' ? 'קטגוריה חדשה…' : 'New category…';
+  var html = '<div class="cat-new-input" onclick="event.stopPropagation()"><input id="cat-new-field" type="text" placeholder="' + placeholder + '" onclick="event.stopPropagation()" /><button onclick="addNewCat(event,\'' + escAttr(key) + '\')">Add</button></div>';
+  for (var i = 0; i < cats.length; i++) {
+    var c = cats[i];
     var isCur = c === currentCat ? ' cur' : '';
     var check = c === currentCat ? ' ✓' : '';
     html += '<div class="cat-option' + isCur + '" onclick="setCatOverride(event,\'' + escAttr(key) + '\',\'' + escAttr(c) + '\')">' + escHtml(c) + check + '</div>';
@@ -1539,7 +1564,8 @@ function addNewCat(ev, key) {
   var f = document.getElementById('cat-new-field');
   var name = f ? f.value.trim() : '';
   if (!name) return;
-  if (ALL_CATS.indexOf(name) === -1) ALL_CATS.push(name);
+  var list = getCatList(currentEditorSource);
+  if (list.indexOf(name) === -1) list.push(name);
   setCatOverride(ev, key, name);
 }
 
