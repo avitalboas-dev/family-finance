@@ -6,6 +6,7 @@
 <title>Family Finance</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg:#f7f4ef; --card:#ffffff; --border:#ece8e0; --border2:#d5cfc5;
@@ -324,6 +325,17 @@
   .cat-row:hover .trend-link{opacity:1;}
   .trend-link:hover{color:var(--accent);}
 
+  /* ── SOURCE FILTER ── */
+  .source-controls{display:flex;align-items:center;gap:4px;margin-left:16px;}
+  .src-btn{
+    font-family:inherit;font-size:11px;font-weight:500;
+    color:var(--ink2);background:none;border:1px solid var(--border2);
+    cursor:pointer;padding:5px 11px;border-radius:20px;transition:all 0.15s;
+  }
+  .src-btn:hover{color:var(--ink);border-color:var(--ink2);}
+  .src-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .mixed-cur{display:block;font-size:12px;color:var(--ink2);margin-top:2px;}
+
   /* ── RESPONSIVE ── */
   @media(max-width:640px){
     header{padding:12px 16px;}
@@ -353,6 +365,11 @@
       <input type="date" id="date-to" onchange="applyPeriod()">
     </div>
   </div>
+  <div class="source-controls" id="source-controls" style="display:none">
+    <button class="src-btn active" id="src-all" onclick="setSource('all')">All</button>
+    <button class="src-btn" id="src-revolut" onclick="setSource('revolut')">Revolut</button>
+    <button class="src-btn" id="src-hapoalim" onclick="setSource('hapoalim')">Hapoalim</button>
+  </div>
 </header>
 
 <div id="upload-section">
@@ -360,10 +377,10 @@
     <div class="upload-icon">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     </div>
-    <h2>Drop your Revolut CSV here</h2>
-    <p>Export from Revolut app → Documents &amp; Statements → CSV</p>
+    <h2>Drop a bank export here</h2>
+    <p>Revolut CSV &nbsp;·&nbsp; Bank Hapoalim Excel (.xlsx)</p>
     <p id="cat-load-status" style="margin-top:10px;font-size:11px;color:var(--ink2)"></p>
-    <input type="file" id="file-input" accept=".csv">
+    <input type="file" id="file-input" accept=".csv,.xlsx,.xls">
     <br>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose file</button>
   </div>
@@ -471,9 +488,10 @@ const ALL_CATS = [
   'Groceries','Eating Out','Transport','Shopping','Subscriptions',
   'Health','Kids','Home','Income','Savings','Entertainment','Travel','Other'
 ];
-const STORE_KEY    = 'revolut_cat_v5';
-const TX_STORE_KEY = 'revolut_tx_v1';
-const FLAGS_KEY    = 'revolut_flags_v1';
+const STORE_KEY         = 'revolut_cat_v5';
+const TX_STORE_KEY      = 'revolut_tx_v1';
+const HAPOALIM_TX_KEY   = 'hapoalim_tx_v1';
+const FLAGS_KEY         = 'revolut_flags_v1';
 const PAGE_SIZE    = 50;
 
 // ─── CATEGORY METADATA (colors + initials for icons) ─────────────────────────
@@ -506,7 +524,10 @@ function catMeta(cat) {
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
+var revolutTx    = [];
+var hapoalimTx   = [];
 var allTx        = [];
+var activeSource = 'all';
 var catOverrides = {};
 var activeCat    = 'All';
 var activeDir    = 'all';
@@ -525,13 +546,23 @@ try { catOverrides = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catc
 (function restoreTxs() {
   try {
     var saved = localStorage.getItem(TX_STORE_KEY);
-    if (!saved) return;
-    var txs = JSON.parse(saved);
-    if (!txs || !txs.length) return;
-    allTx = txs;
-    buildPeriodPicker(txs);
-    renderDashboard(getViewTxs());
+    if (saved) {
+      var txs = JSON.parse(saved);
+      if (txs && txs.length) { revolutTx = txs.map(function(t) { t.source = t.source || 'revolut'; return t; }); }
+    }
   } catch(ignore) {}
+  try {
+    var saved2 = localStorage.getItem(HAPOALIM_TX_KEY);
+    if (saved2) {
+      var txs2 = JSON.parse(saved2);
+      if (txs2 && txs2.length) hapoalimTx = txs2;
+    }
+  } catch(ignore) {}
+  allTx = revolutTx.concat(hapoalimTx);
+  if (!allTx.length) return;
+  updateSourceFilter();
+  buildPeriodPicker(allTx);
+  renderDashboard(getViewTxs());
 })();
 
 function persistOverrides() {
@@ -584,10 +615,17 @@ document.getElementById('file-input').addEventListener('change', function(ev) {
 });
 
 function readFile(file) {
+  var ext = file.name.split('.').pop().toLowerCase();
   var reader = new FileReader();
-  reader.onload = function(ev) { parseCSV(ev.target.result); };
-  reader.onerror = function() { alert('Could not read file.'); };
-  reader.readAsText(file, 'UTF-8');
+  if (ext === 'xlsx' || ext === 'xls') {
+    reader.onload = function(ev) { parseHapoalim(ev.target.result); };
+    reader.onerror = function() { alert('Could not read file.'); };
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.onload = function(ev) { parseCSV(ev.target.result); };
+    reader.onerror = function() { alert('Could not read file.'); };
+    reader.readAsText(file, 'UTF-8');
+  }
 }
 
 // ─── CSV PARSING ──────────────────────────────────────────────────────────────
@@ -662,22 +700,144 @@ function parseCSV(text) {
       var key     = desc.toLowerCase().trim() + '|' + dir;
       var category = catOverrides[key] || csvCat || guessCategory(desc, type);
 
-      txs.push({ date: date, desc: desc, amount: amt, category: category, currency: currency, key: key });
+      txs.push({ date: date, desc: desc, amount: amt, category: category, currency: currency, key: key, source: 'revolut' });
     }
 
     if (txs.length === 0) { alert('No transactions found in this file.\n\nMake sure this is a Revolut CSV export.'); return; }
 
-    allTx = txs;
+    revolutTx = txs;
+    allTx = revolutTx.concat(hapoalimTx);
     activeCat = 'All';
     shownCount = PAGE_SIZE;
     try { localStorage.setItem(TX_STORE_KEY, JSON.stringify(txs)); } catch(ignore) {}
-    buildPeriodPicker(txs);
+    updateSourceFilter();
+    buildPeriodPicker(allTx);
     renderDashboard(getViewTxs());
 
   } catch(err) {
     alert('Error parsing file: ' + err.message);
     console.error(err);
   }
+}
+
+// ─── HAPOALIM EXCEL PARSING ───────────────────────────────────────────────────
+function parseHapoalim(buffer) {
+  try {
+    var wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+
+    var dataStart = -1;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      for (var j = 0; j < (row || []).length; j++) {
+        if (row[j] && String(row[j]).trim() === 'תאריך') { dataStart = i + 1; break; }
+      }
+      if (dataStart > 0) break;
+    }
+    if (dataStart < 0) { alert('Could not find a date column (תאריך). Is this a Bank Hapoalim export?'); return; }
+
+    var headerRow = rows[dataStart - 1];
+    var colMap = {};
+    for (var j = 0; j < headerRow.length; j++) {
+      var h = headerRow[j] ? String(headerRow[j]).trim() : '';
+      if (h === 'תאריך')    colMap.date    = j;
+      if (h === 'הפעולה')   colMap.op      = j;
+      if (h === 'פרטים')    colMap.details = j;
+      if (h === 'חובה')     colMap.debit   = j;
+      if (h === 'זכות')     colMap.credit  = j;
+      if (h === 'לטובת')    colMap.for_who = j;
+      if (h === 'עבור')     colMap.for_what= j;
+    }
+
+    var txs = [];
+    for (var i = dataStart; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row || row[colMap.date] == null) continue;
+
+      var rawDate = row[colMap.date];
+      var dateStr = '';
+      if (rawDate instanceof Date) {
+        dateStr = rawDate.toISOString().slice(0, 10);
+      } else if (typeof rawDate === 'string') {
+        var parts = rawDate.split('/');
+        if (parts.length === 3) dateStr = parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+        else dateStr = rawDate.slice(0, 10);
+      } else continue;
+
+      var debit  = parseFloat(row[colMap.debit])  || 0;
+      var credit = parseFloat(row[colMap.credit]) || 0;
+      var amount = credit > 0 ? credit : -debit;
+      if (amount === 0) continue;
+
+      var op      = row[colMap.op]      ? String(row[colMap.op]).trim()      : '';
+      var details = row[colMap.details] ? String(row[colMap.details]).trim() : '';
+      var forWho  = row[colMap.for_who] ? String(row[colMap.for_who]).trim() : '';
+      var forWhat = row[colMap.for_what]? String(row[colMap.for_what]).trim(): '';
+      var desc = op;
+      if (details && details !== op) desc += ' — ' + details;
+      else if (forWho)  desc += ' — ' + forWho;
+      else if (forWhat) desc += ' — ' + forWhat;
+
+      var dir = amount > 0 ? 'in' : 'out';
+      var key = desc.toLowerCase().trim() + '|' + dir;
+      var category = catOverrides[key] || guessHapoalimCategory(op, details);
+
+      txs.push({ date: dateStr, desc: desc, amount: amount, category: category, currency: 'ILS', key: key, source: 'hapoalim' });
+    }
+
+    if (txs.length === 0) { alert('No transactions found in this file.'); return; }
+
+    hapoalimTx = txs;
+    allTx = revolutTx.concat(hapoalimTx);
+    activeCat = 'All';
+    shownCount = PAGE_SIZE;
+    try { localStorage.setItem(HAPOALIM_TX_KEY, JSON.stringify(txs)); } catch(ignore) {}
+    updateSourceFilter();
+    buildPeriodPicker(allTx);
+    renderDashboard(getViewTxs());
+
+  } catch(err) {
+    alert('Error parsing Hapoalim file: ' + err.message);
+    console.error(err);
+  }
+}
+
+function guessHapoalimCategory(op, details) {
+  var t = (op + ' ' + details).toLowerCase();
+  if (/משכורת|שכר|פנסיה|גמלה|קצבה|ביטוח לאומי|הכנסה|זיכוי מ/.test(t)) return 'Income';
+  if (/סופרמרקט|שופרסל|רמי לוי|מגה|ויקטורי|יינות|אושר עד|מחסני|סופר|קרפור|מאחסן/.test(t)) return 'Groceries';
+  if (/מסעדה|קפה|בית קפה|אוכל|פיצה|סושי|מקדונל|בורגר|וולט|wolt|10bis|מישמיש/.test(t)) return 'Eating Out';
+  if (/דלק|תחנת דלק|רכבת|אוטובוס|מונית|גט|יאנגו|חניה|טסט|ביטוח רכב/.test(t)) return 'Transport';
+  if (/כאל|מקס|ויזה|אשראי|לאומי קארד/.test(t)) return 'Shopping';
+  if (/נטפליקס|ספוטיפיי|חשבון|מנוי|אינטרנט|hot|yes|partner|cellcom|019/.test(t)) return 'Subscriptions';
+  if (/רופא|בית חולים|ביטוח בריאות|קופת חולים|תרופות|מכבי|כללית|לאומית/.test(t)) return 'Health';
+  if (/גן|צהרון|בית ספר|חינוך|ילד|טיפול|שמרטף|צעצוע/.test(t)) return 'Kids';
+  if (/שכר דירה|ועד בית|חשמל|מים|גז|ארנונה|משכנתא|ביטוח בית|תיקון/.test(t)) return 'Home';
+  if (/קולנוע|תיאטרון|ספורט|בידור/.test(t)) return 'Entertainment';
+  if (/טיסה|מלון|airbnb|booking|נסיעה לחו"?ל/.test(t)) return 'Travel';
+  if (/חיסכון|קופת גמל|קרן השתלמות|פיקדון/.test(t)) return 'Savings';
+  return 'Other';
+}
+
+// ─── SOURCE FILTER ────────────────────────────────────────────────────────────
+function setSource(src) {
+  activeSource = src;
+  ['all','revolut','hapoalim'].forEach(function(s) {
+    var btn = document.getElementById('src-' + s);
+    if (btn) btn.classList.toggle('active', s === src);
+  });
+  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; shownCount = PAGE_SIZE;
+  var viewTxs = getViewTxs();
+  buildPeriodPicker(viewTxs.length ? viewTxs : allTx);
+  renderDashboard(getViewTxs());
+}
+
+function updateSourceFilter() {
+  var hasRev = revolutTx.length > 0;
+  var hasHap = hapoalimTx.length > 0;
+  var ctrl = document.getElementById('source-controls');
+  if (ctrl) ctrl.style.display = (hasRev && hasHap) ? 'flex' : 'none';
 }
 
 // ─── CATEGORY GUESSING ────────────────────────────────────────────────────────
@@ -736,42 +896,73 @@ function applyPeriod() {
 }
 
 function getViewTxs() {
+  var pool = activeSource === 'all' ? allTx :
+             allTx.filter(function(t) { return t.source === activeSource; });
   var val = document.getElementById('period-select').value;
-  if (val === 'all') return allTx;
+  if (val === 'all') return pool;
   if (val === '3m' || val === '6m') {
     var months = val === '3m' ? 3 : 6;
     var cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - months);
     var from = cutoff.toISOString().slice(0, 10);
-    return allTx.filter(function(t) { return t.date.slice(0, 10) >= from; });
+    return pool.filter(function(t) { return t.date.slice(0, 10) >= from; });
   }
   if (val === 'custom') {
     var from = document.getElementById('date-from').value;
     var to   = document.getElementById('date-to').value;
-    return allTx.filter(function(t) {
+    return pool.filter(function(t) {
       var d = t.date.slice(0,10);
       return (!from || d >= from) && (!to || d <= to);
     });
   }
-  return allTx.filter(function(t) { return t.date.slice(0,7) === val; });
+  return pool.filter(function(t) { return t.date.slice(0,7) === val; });
 }
 
 // ─── RENDER DASHBOARD ─────────────────────────────────────────────────────────
 function renderDashboard(txs) {
-  var cur = (txs[0] && txs[0].currency) || 'EUR';
-  var totalIn  = 0;
-  var totalOut = 0;
-  for (var i = 0; i < txs.length; i++) {
-    if (txs[i].amount > 0) totalIn  += txs[i].amount;
-    else                    totalOut += txs[i].amount;
-  }
-  var net = totalIn + totalOut;
+  var currencies = {};
+  for (var i = 0; i < txs.length; i++) currencies[txs[i].currency || 'EUR'] = true;
+  var curList = Object.keys(currencies);
+  var mixed = curList.length > 1;
+  var cur = mixed ? curList[0] : (curList[0] || 'EUR');
 
-  document.getElementById('total-in').textContent  = fmtAmt(totalIn, cur);
-  document.getElementById('total-out').textContent = fmtAmt(Math.abs(totalOut), cur);
-  var netEl = document.getElementById('total-net');
-  netEl.textContent = (net >= 0 ? '+' : '–') + fmtAmt(Math.abs(net), cur);
-  netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--accent)';
+  if (mixed) {
+    var totals = {};
+    for (var c = 0; c < curList.length; c++) totals[curList[c]] = { in: 0, out: 0 };
+    for (var i = 0; i < txs.length; i++) {
+      var tc = txs[i].currency || 'EUR';
+      if (txs[i].amount > 0) totals[tc].in  += txs[i].amount;
+      else                    totals[tc].out += txs[i].amount;
+    }
+    var inHtml = '', outHtml = '', netHtml = '';
+    for (var c = 0; c < curList.length; c++) {
+      var cc = curList[c];
+      var cnet = totals[cc].in + totals[cc].out;
+      var pre = c === 0 ? '' : '<span class="mixed-cur">';
+      var suf = c === 0 ? '' : '</span>';
+      inHtml  += pre + fmtAmt(totals[cc].in, cc) + suf;
+      outHtml += pre + fmtAmt(Math.abs(totals[cc].out), cc) + suf;
+      netHtml += pre + (cnet >= 0 ? '+' : '–') + fmtAmt(Math.abs(cnet), cc) + suf;
+    }
+    document.getElementById('total-in').innerHTML  = inHtml;
+    document.getElementById('total-out').innerHTML = outHtml;
+    var netEl = document.getElementById('total-net');
+    netEl.innerHTML = netHtml;
+    netEl.style.color = '';
+  } else {
+    var totalIn  = 0;
+    var totalOut = 0;
+    for (var i = 0; i < txs.length; i++) {
+      if (txs[i].amount > 0) totalIn  += txs[i].amount;
+      else                    totalOut += txs[i].amount;
+    }
+    var net = totalIn + totalOut;
+    document.getElementById('total-in').textContent  = fmtAmt(totalIn, cur);
+    document.getElementById('total-out').textContent = fmtAmt(Math.abs(totalOut), cur);
+    var netEl = document.getElementById('total-net');
+    netEl.textContent = (net >= 0 ? '+' : '–') + fmtAmt(Math.abs(net), cur);
+    netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--accent)';
+  }
 
   renderSpendCats(txs, cur);
   renderIncomeCats(txs, cur);
@@ -1426,24 +1617,34 @@ function importOverrides(ev) {
 // ─── RESET ────────────────────────────────────────────────────────────────────
 function doReset() {
   try { localStorage.removeItem(TX_STORE_KEY); } catch(ignore) {}
+  try { localStorage.removeItem(HAPOALIM_TX_KEY); } catch(ignore) {}
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('upload-section').style.display = 'flex';
   document.getElementById('date-controls').style.display = 'none';
+  document.getElementById('source-controls').style.display = 'none';
   document.getElementById('file-input').value = '';
-  allTx = [];
+  allTx = []; revolutTx = []; hapoalimTx = [];
+  activeSource = 'all';
   activeCat = 'All'; activeDir = 'all'; activeSearch = ''; shownCount = PAGE_SIZE;
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
+function curSym(cur) {
+  if (cur === 'EUR') return '€';
+  if (cur === 'GBP') return '£';
+  if (cur === 'USD') return '$';
+  if (cur === 'ILS') return '₪';
+  return cur || '€';
+}
+
 function fmtShort(n, cur) {
-  var sym = cur === 'EUR' ? '€' : cur === 'GBP' ? '£' : cur === 'USD' ? '$' : (cur || '€');
+  var sym = curSym(cur);
   if (n >= 1000) return sym + (n / 1000).toFixed(1) + 'k';
   return sym + Math.round(n);
 }
 
 function fmtAmt(n, cur) {
-  var sym = cur === 'EUR' ? '€' : cur === 'GBP' ? '£' : cur === 'USD' ? '$' : (cur || '€');
-  return sym + Math.abs(n).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return curSym(cur) + Math.abs(n).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function escHtml(s) {
