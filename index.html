@@ -139,6 +139,8 @@
     padding:5px 14px;background:none;border:none;color:var(--ink2);cursor:pointer;transition:all 0.12s;
   }
   .flow-toggle button.ft-active{background:var(--ink);color:white;}
+  .flow-toggle button.ft-green{background:var(--green);color:white;}
+  .flow-toggle button.ft-red{background:var(--accent);color:white;}
   .flow-checks{display:flex;gap:14px;}
   .flow-check{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2);cursor:pointer;user-select:none;}
   .flow-check-dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
@@ -1308,9 +1310,11 @@ function renderFilters(txs) {
   cats.sort(function(a,b) { if(a==='All') return -1; if(b==='All') return 1; return a.localeCompare(b); });
 
   var dirHtml =
-    '<button class="filter-btn dir-btn' + (activeDir === 'all' ? ' active' : '') + '" onclick="filterByDir(\'all\')">All</button>' +
-    '<button class="filter-btn dir-btn' + (activeDir === 'in'  ? ' active green-active' : '') + '" onclick="filterByDir(\'in\')">↑ In</button>' +
-    '<button class="filter-btn dir-btn' + (activeDir === 'out' ? ' active red-active'   : '') + '" onclick="filterByDir(\'out\')">↓ Out</button>' +
+    '<div class="flow-toggle">' +
+    '<button class="' + (activeDir === 'all' ? 'ft-active' : '') + '" onclick="filterByDir(\'all\')">All</button>' +
+    '<button class="' + (activeDir === 'in'  ? 'ft-green'  : '') + '" onclick="filterByDir(\'in\')">↑ In</button>' +
+    '<button class="' + (activeDir === 'out' ? 'ft-red'    : '') + '" onclick="filterByDir(\'out\')">↓ Out</button>' +
+    '</div>' +
     '<span class="filter-sep"></span>';
 
   var catHtml = '';
