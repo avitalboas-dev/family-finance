@@ -1801,9 +1801,7 @@ function buildGridLines(maxVal, H, cur) {
 }
 
 function fmtShort(n, cur) {
-  var sym = curSym(cur);
-  if (n >= 1000) return sym + (n / 1000).toFixed(1) + 'k';
-  return sym + Math.round(n);
+  return curSym(cur) + Math.round(n).toLocaleString('en-IE');
 }
 
 function fmtAmt(n, cur) {
