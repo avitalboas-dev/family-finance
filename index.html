@@ -996,13 +996,13 @@ function renderDashboard(txs) {
       var suf = c === 0 ? '' : '</span>';
       inHtml  += pre + fmtShort(totals[cc].in, cc) + suf;
       outHtml += pre + fmtShort(Math.abs(totals[cc].out), cc) + suf;
-      netHtml += pre + (cnet >= 0 ? '+' : '–') + fmtShort(Math.abs(cnet), cc) + suf;
+      var netCol = cnet >= 0 ? 'var(--green)' : 'var(--accent)';
+      netHtml += pre + '<span style="color:' + netCol + '">' + (cnet >= 0 ? '+' : '–') + fmtShort(Math.abs(cnet), cc) + '</span>' + suf;
     }
     document.getElementById('total-in').innerHTML  = inHtml;
     document.getElementById('total-out').innerHTML = outHtml;
     var netEl = document.getElementById('total-net');
     netEl.innerHTML = netHtml;
-    netEl.style.color = '';
   } else {
     var totalIn  = 0;
     var totalOut = 0;
