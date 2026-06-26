@@ -30,7 +30,8 @@
   }
   .logo-mark svg{width:16px;height:16px;fill:none;stroke:white;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   header h1{font-size:14px;font-weight:600;letter-spacing:-0.01em;}
-  .date-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;}
+  .header-right{display:flex;align-items:center;gap:12px;margin-left:auto;flex-wrap:wrap;}
+  .date-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .date-controls label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink2);}
   .dc-select{
     font-family:'Inter',system-ui,sans-serif;font-size:12px;
@@ -368,25 +369,27 @@
     <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
   </div>
   <h1>Family Finance</h1>
-  <div class="date-controls" id="date-controls" style="display:none">
-    <label>Period</label>
-    <select class="dc-select" id="period-select" onchange="onPeriodChange()">
-      <option value="all">All time</option>
-    </select>
-    <div class="custom-range" id="custom-range">
-      <input type="date" id="date-from" onchange="applyPeriod()">
-      <span>→</span>
-      <input type="date" id="date-to" onchange="applyPeriod()">
+  <div class="header-right">
+    <div id="header-file-btns" style="display:none;align-items:center;gap:6px;">
+      <button class="ghost-btn" onclick="document.getElementById('file-input').click()">+ Add bank file</button>
+      <button class="ghost-btn" onclick="doReset()">Clear data</button>
     </div>
-  </div>
-  <div class="source-controls" id="source-controls" style="display:none">
-    <button class="src-btn active" id="src-all" onclick="setSource('all')">All</button>
-    <button class="src-btn" id="src-revolut" onclick="setSource('revolut')">Revolut</button>
-    <button class="src-btn" id="src-hapoalim" onclick="setSource('hapoalim')">Hapoalim</button>
-  </div>
-  <div id="header-file-btns" style="display:none;align-items:center;gap:6px;">
-    <button class="ghost-btn" onclick="document.getElementById('file-input').click()">+ Add bank file</button>
-    <button class="ghost-btn" onclick="doReset()">Clear data</button>
+    <div class="source-controls" id="source-controls" style="display:none">
+      <button class="src-btn active" id="src-all" onclick="setSource('all')">All</button>
+      <button class="src-btn" id="src-revolut" onclick="setSource('revolut')">Revolut</button>
+      <button class="src-btn" id="src-hapoalim" onclick="setSource('hapoalim')">Hapoalim</button>
+    </div>
+    <div class="date-controls" id="date-controls" style="display:none">
+      <label>Period</label>
+      <select class="dc-select" id="period-select" onchange="onPeriodChange()">
+        <option value="all">All time</option>
+      </select>
+      <div class="custom-range" id="custom-range">
+        <input type="date" id="date-from" onchange="applyPeriod()">
+        <span>→</span>
+        <input type="date" id="date-to" onchange="applyPeriod()">
+      </div>
+    </div>
   </div>
 </header>
 
