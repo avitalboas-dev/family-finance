@@ -346,6 +346,8 @@
     .tab-bar{padding:0 16px 12px;}
     .content-wrap{padding:0 16px 20px;}
     .main-grid{grid-template-columns:1fr;}
+    #th-category,.tx-table td.cat-cell{display:none;}
+    .tx-desc{max-width:120px;}
   }
 </style>
 </head>
@@ -472,7 +474,7 @@
             <button id="ft-grouped">Grouped</button>
           </div>
           <div id="flow-inout-checks" class="flow-checks">
-            <label class="flow-check"><input type="checkbox" id="fc-in"> <span class="flow-check-dot" style="background:var(--green)"></span> In</label>
+            <label class="flow-check"><input type="checkbox" id="fc-in" checked> <span class="flow-check-dot" style="background:var(--green)"></span> In</label>
             <label class="flow-check"><input type="checkbox" id="fc-out" checked> <span class="flow-check-dot" style="background:var(--accent)"></span> Out</label>
           </div>
         </div>
@@ -902,7 +904,6 @@ function buildPeriodPicker(txs) {
   }
   sel.value = '3m';
 
-  document.getElementById('date-controls').style.display = 'flex';
 }
 
 function onPeriodChange() {
@@ -997,6 +998,7 @@ function renderDashboard(txs) {
 
   document.getElementById('upload-section').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('date-controls').style.display = 'flex';
 }
 
 // ─── SPENDING BY CATEGORY ─────────────────────────────────────────────────────
@@ -1063,7 +1065,7 @@ function renderIncomeCats(txs, cur) {
 
 // ─── FLOW CHART ───────────────────────────────────────────────────────────────
 var flowMode    = 'all';
-var flowShowIn  = false;
+var flowShowIn  = true;
 var flowShowOut = true;
 var flowCatFilter = {};
 var CAT_COLORS = [
@@ -1650,6 +1652,7 @@ function importOverrides(ev) {
 
 // ─── RESET ────────────────────────────────────────────────────────────────────
 function doReset() {
+  if (!confirm('Remove all loaded data and start over?')) return;
   try { localStorage.removeItem(TX_STORE_KEY); } catch(ignore) {}
   try { localStorage.removeItem(HAPOALIM_TX_KEY); } catch(ignore) {}
   document.getElementById('dashboard').style.display = 'none';
