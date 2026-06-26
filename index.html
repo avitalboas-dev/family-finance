@@ -257,8 +257,9 @@
   .flag-btn{
     background:none;border:none;cursor:pointer;
     font-size:15px;color:var(--border2);padding:2px 3px;line-height:1;
-    opacity:0.35;transition:color 0.12s,opacity 0.12s;
+    opacity:0;transition:color 0.12s,opacity 0.12s;
   }
+  .tx-table tr:hover .flag-btn{opacity:0.55;}
   .flag-btn:hover{color:var(--accent);opacity:1;}
   .flag-btn.flagged{color:var(--accent);opacity:1;}
   .tx-icon{
@@ -342,10 +343,13 @@
   @media(max-width:640px){
     header{padding:12px 16px;}
     .date-controls{margin-left:0;width:100%;}
-    .summary-strip{grid-template-columns:1fr;padding:12px 16px;}
+    .summary-strip{grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;}
+    .summary-card{padding:12px 10px;}
+    .summary-card .amount{font-size:16px;}
     .tab-bar{padding:0 16px 12px;}
     .content-wrap{padding:0 16px 20px;}
     .main-grid{grid-template-columns:1fr;}
+    .cat-bar-track{display:none;}
     #th-category,.tx-table td.cat-cell{display:none;}
     .tx-desc{max-width:120px;}
   }
@@ -421,7 +425,7 @@
         <div id="cat-spend"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel" style="align-self:start">
         <div class="panel-title">Income by category</div>
         <div id="cat-income"></div>
       </div>
@@ -965,9 +969,9 @@ function renderDashboard(txs) {
       var cnet = totals[cc].in + totals[cc].out;
       var pre = c === 0 ? '' : '<span class="mixed-cur">';
       var suf = c === 0 ? '' : '</span>';
-      inHtml  += pre + fmtAmt(totals[cc].in, cc) + suf;
-      outHtml += pre + fmtAmt(Math.abs(totals[cc].out), cc) + suf;
-      netHtml += pre + (cnet >= 0 ? '+' : '–') + fmtAmt(Math.abs(cnet), cc) + suf;
+      inHtml  += pre + fmtShort(totals[cc].in, cc) + suf;
+      outHtml += pre + fmtShort(Math.abs(totals[cc].out), cc) + suf;
+      netHtml += pre + (cnet >= 0 ? '+' : '–') + fmtShort(Math.abs(cnet), cc) + suf;
     }
     document.getElementById('total-in').innerHTML  = inHtml;
     document.getElementById('total-out').innerHTML = outHtml;
@@ -982,10 +986,10 @@ function renderDashboard(txs) {
       else                    totalOut += txs[i].amount;
     }
     var net = totalIn + totalOut;
-    document.getElementById('total-in').textContent  = fmtAmt(totalIn, cur);
-    document.getElementById('total-out').textContent = fmtAmt(Math.abs(totalOut), cur);
+    document.getElementById('total-in').textContent  = fmtShort(totalIn, cur);
+    document.getElementById('total-out').textContent = fmtShort(Math.abs(totalOut), cur);
     var netEl = document.getElementById('total-net');
-    netEl.textContent = (net >= 0 ? '+' : '–') + fmtAmt(Math.abs(net), cur);
+    netEl.textContent = (net >= 0 ? '+' : '–') + fmtShort(Math.abs(net), cur);
     netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--accent)';
   }
 
@@ -1127,6 +1131,9 @@ function setCatFilterAll(val) {
 function renderFlow(txs, cur) {
   window._lastFlowTxs = txs;
   window._lastFlowCur = cur;
+  var periodVal = document.getElementById('period-select').value;
+  var hint = document.querySelector('.flow-hint');
+  if (hint) hint.style.display = /^\d{4}-\d{2}$/.test(periodVal) ? '' : 'none';
   if (flowMode === 'grouped') { renderFlowGrouped(txs, cur); return; }
 
   var months = {};
@@ -1488,7 +1495,7 @@ function renderTxs(txs, cur) {
     html += '<tr>' +
       '<td><button class="flag-btn' + (isFlagged ? ' flagged' : '') + '" onclick="toggleFlag(' + i + ',event)" title="Flag for review">⚑</button></td>' +
       '<td class="tx-icon-cell"><div class="tx-icon" style="background:' + m.bg + ';color:' + m.color + '">' + initial + '</div></td>' +
-      '<td class="tx-date">' + t.date.slice(0,10) + '</td>' +
+      '<td class="tx-date">' + fmtDate(t.date.slice(0,10)) + '</td>' +
       '<td class="tx-desc">' + highlight(t.desc, q) + '</td>' +
       '<td class="cat-cell" id="cc' + i + '">' +
         '<span class="cat-tag' + customCls + '" onclick="openCatEditor(event,\'' + escAttr(t.key) + '\',' + i + ',\'' + escAttr(t.category) + '\',\'' + (t.source || 'revolut') + '\')">' +
@@ -1672,6 +1679,11 @@ function curSym(cur) {
   if (cur === 'USD') return '$';
   if (cur === 'ILS') return '₪';
   return cur || '€';
+}
+
+function fmtDate(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.toLocaleString('en', { day: 'numeric', month: 'short' });
 }
 
 function fmtShort(n, cur) {
