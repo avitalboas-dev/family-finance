@@ -274,13 +274,17 @@
   .tx-amt{text-align:right;font-size:13px;font-weight:500;white-space:nowrap;font-family:'DM Mono',monospace;}
   .tx-amt.credit{color:var(--green);}
   .tx-amt.debit{color:var(--accent);}
-  .more-row td{padding:12px 0 2px;}
-  .more-btn{
-    font-family:inherit;font-size:11px;font-weight:500;
-    color:var(--ink2);background:none;border:1px solid var(--border2);
-    cursor:pointer;padding:7px 16px;transition:all 0.15s;border-radius:20px;
-  }
-  .more-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .tx-pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 0 2px;gap:10px;flex-wrap:wrap;}
+  .tx-pagination-left{display:flex;align-items:center;gap:10px;}
+  .tx-pagination-info{font-size:11px;color:var(--ink2);}
+  .tx-page-size-label{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:4px;}
+  .tx-page-size{font-family:inherit;font-size:11px;color:var(--ink);border:1px solid var(--border2);background:var(--bg);border-radius:var(--r-sm);padding:3px 4px;cursor:pointer;}
+  .tx-pagination-controls{display:flex;align-items:center;gap:3px;}
+  .tx-page-btn{font-family:inherit;font-size:11px;font-weight:500;color:var(--ink2);background:none;border:1px solid var(--border);cursor:pointer;padding:4px 8px;transition:all 0.12s;border-radius:var(--r-sm);min-width:28px;line-height:1.4;text-align:center;}
+  .tx-page-btn:hover:not(:disabled){border-color:var(--ink);color:var(--ink);}
+  .tx-page-btn.pg-active{background:var(--ink);color:white;border-color:var(--ink);}
+  .tx-page-btn:disabled{opacity:0.35;cursor:default;}
+  .tx-page-ellipsis{font-size:11px;color:var(--ink3);padding:0 3px;}
 
   /* ── CAT EDITOR ── */
   .cat-cell{position:relative;}
@@ -462,6 +466,7 @@
           </thead>
           <tbody id="tx-body"></tbody>
         </table>
+        <div id="tx-pagination" class="tx-pagination"></div>
       </div>
 
     </div>
@@ -508,7 +513,7 @@ const STORE_KEY         = 'revolut_cat_v5';
 const TX_STORE_KEY      = 'revolut_tx_v1';
 const HAPOALIM_TX_KEY   = 'hapoalim_tx_v1';
 const FLAGS_KEY         = 'revolut_flags_v1';
-const PAGE_SIZE    = 50;
+var pageSize = 25;
 
 // ─── CATEGORY METADATA (colors + initials for icons) ─────────────────────────
 var CAT_META = {
@@ -561,7 +566,7 @@ var catOverrides = {};
 var activeCat    = 'All';
 var activeDir    = 'all';
 var activeSearch = '';
-var shownCount   = PAGE_SIZE;
+var currentPage  = 0;
 var openDrop            = null;
 var currentEditorSource = 'revolut';
 var sortCol      = 'date';
@@ -740,7 +745,7 @@ function parseCSV(text) {
     revolutTx = txs;
     allTx = revolutTx.concat(hapoalimTx);
     activeCat = 'All';
-    shownCount = PAGE_SIZE;
+    currentPage = 0;
     try { localStorage.setItem(TX_STORE_KEY, JSON.stringify(txs)); } catch(ignore) {}
     updateSourceFilter();
     buildPeriodPicker(allTx);
@@ -823,7 +828,7 @@ function parseHapoalim(buffer) {
     hapoalimTx = txs;
     allTx = revolutTx.concat(hapoalimTx);
     activeCat = 'All';
-    shownCount = PAGE_SIZE;
+    currentPage = 0;
     try { localStorage.setItem(HAPOALIM_TX_KEY, JSON.stringify(txs)); } catch(ignore) {}
     updateSourceFilter();
     buildPeriodPicker(allTx);
@@ -859,7 +864,7 @@ function setSource(src) {
     var btn = document.getElementById('src-' + s);
     if (btn) btn.classList.toggle('active', s === src);
   });
-  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; shownCount = PAGE_SIZE;
+  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; currentPage = 0;
   var viewTxs = getViewTxs();
   buildPeriodPicker(viewTxs.length ? viewTxs : allTx);
   renderDashboard(getViewTxs());
@@ -915,13 +920,13 @@ function buildPeriodPicker(txs) {
 function onPeriodChange() {
   var val = document.getElementById('period-select').value;
   document.getElementById('custom-range').style.display = val === 'custom' ? 'flex' : 'none';
-  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; shownCount = PAGE_SIZE;
+  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; currentPage = 0;
   var s = document.getElementById('tx-search'); if (s) { s.value = ''; document.getElementById('search-clear').style.display='none'; }
   renderDashboard(getViewTxs());
 }
 
 function applyPeriod() {
-  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; shownCount = PAGE_SIZE;
+  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; currentPage = 0;
   var s = document.getElementById('tx-search'); if (s) { s.value = ''; document.getElementById('search-clear').style.display='none'; }
   renderDashboard(getViewTxs());
 }
@@ -1347,7 +1352,7 @@ function renderFilters(txs) {
 
 function filterByDir(dir) {
   activeDir  = dir;
-  shownCount = PAGE_SIZE;
+  currentPage = 0;
   var base = getViewTxs();
   renderFilters(base);
   var subset = applyFilters(base);
@@ -1355,8 +1360,8 @@ function filterByDir(dir) {
 }
 
 function filterByCat(cat) {
-  activeCat  = cat;
-  shownCount = PAGE_SIZE;
+  activeCat  = (activeCat === cat) ? 'All' : cat;
+  currentPage = 0;
   var base = getViewTxs();
   renderFilters(base);
   var subset = applyFilters(base);
@@ -1383,7 +1388,7 @@ function applyFilters(txs) {
 
 function onSearch(val) {
   activeSearch = val.trim();
-  shownCount   = PAGE_SIZE;
+  currentPage  = 0;
   document.getElementById('search-clear').style.display = activeSearch ? 'block' : 'none';
   var base = getViewTxs();
   renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
@@ -1393,7 +1398,7 @@ function clearSearch() {
   activeSearch = '';
   document.getElementById('tx-search').value = '';
   document.getElementById('search-clear').style.display = 'none';
-  shownCount = PAGE_SIZE;
+  currentPage = 0;
   var base = getViewTxs();
   renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
 }
@@ -1420,7 +1425,7 @@ function drillInto(cat, dir) {
   activeCat    = cat;
   activeDir    = dir || 'all';
   activeSearch = '';
-  shownCount   = PAGE_SIZE;
+  currentPage  = 0;
   switchTab('overview');
   var searchEl = document.getElementById('tx-search');
   if (searchEl) { searchEl.value = ''; document.getElementById('search-clear').style.display = 'none'; }
@@ -1474,23 +1479,24 @@ function renderTxs(txs, cur) {
     return 0;
   });
   updateSortHeaders();
-  var visible = sorted.slice(0, shownCount);
+
+  var totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  if (currentPage < 0) currentPage = 0;
+
+  var startIdx = currentPage * pageSize;
+  var endIdx   = Math.min(startIdx + pageSize, sorted.length);
+  var visible  = sorted.slice(startIdx, endIdx);
   window._visibleTxs = visible;
   var q = activeSearch;
 
   var countEl = document.getElementById('search-result-count');
   if (countEl) {
-    if (sorted.length === 0) {
-      countEl.style.display = 'none';
-    } else if (q) {
+    if (q && sorted.length > 0) {
       countEl.textContent = sorted.length + ' result' + (sorted.length === 1 ? '' : 's');
       countEl.style.display = 'block';
     } else {
-      var showing = Math.min(shownCount, sorted.length);
-      countEl.textContent = showing < sorted.length
-        ? 'Showing ' + showing + ' of ' + sorted.length + ' transactions'
-        : sorted.length + ' transaction' + (sorted.length === 1 ? '' : 's');
-      countEl.style.display = 'block';
+      countEl.style.display = 'none';
     }
   }
 
@@ -1522,23 +1528,65 @@ function renderTxs(txs, cur) {
       '</td>' +
     '</tr>';
   }
-
-  if (sorted.length > shownCount) {
-    html += '<tr class="more-row"><td colspan="6">' +
-      '<button class="more-btn" onclick="showMoreTxs()">Show more (' + (sorted.length - shownCount) + ' remaining)</button>' +
-    '</td></tr>';
-  }
-
   document.getElementById('tx-body').innerHTML = html;
+  renderPagination(sorted.length, totalPages);
 }
 
-function showMoreTxs() {
-  shownCount += PAGE_SIZE;
+function renderPagination(total, totalPages) {
+  var el = document.getElementById('tx-pagination');
+  if (!el) return;
+  if (total === 0) { el.innerHTML = ''; return; }
+
+  var startIdx = currentPage * pageSize + 1;
+  var endIdx   = Math.min((currentPage + 1) * pageSize, total);
+
+  var sizeOpts = [10, 25, 50, 100].map(function(n) {
+    return '<option value="' + n + '"' + (n === pageSize ? ' selected' : '') + '>' + n + '</option>';
+  }).join('');
+
+  var maxBtns = 5;
+  var half = Math.floor(maxBtns / 2);
+  var startPage = Math.max(0, Math.min(currentPage - half, totalPages - maxBtns));
+  var endPage   = Math.min(totalPages, startPage + maxBtns);
+  var pages = '';
+  if (startPage > 0) {
+    pages += '<button class="tx-page-btn" onclick="setPage(0)">1</button>';
+    if (startPage > 1) pages += '<span class="tx-page-ellipsis">…</span>';
+  }
+  for (var p = startPage; p < endPage; p++) {
+    pages += '<button class="tx-page-btn' + (p === currentPage ? ' pg-active' : '') + '" onclick="setPage(' + p + ')">' + (p + 1) + '</button>';
+  }
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) pages += '<span class="tx-page-ellipsis">…</span>';
+    pages += '<button class="tx-page-btn" onclick="setPage(' + (totalPages - 1) + ')">' + totalPages + '</button>';
+  }
+
+  el.innerHTML =
+    '<div class="tx-pagination-left">' +
+      '<span class="tx-pagination-info">Showing ' + startIdx + '–' + endIdx + ' of ' + total + '</span>' +
+      '<label class="tx-page-size-label">Rows: <select class="tx-page-size" onchange="setPageSize(+this.value)">' + sizeOpts + '</select></label>' +
+    '</div>' +
+    '<div class="tx-pagination-controls">' +
+      '<button class="tx-page-btn" onclick="setPage(' + (currentPage - 1) + ')"' + (currentPage === 0 ? ' disabled' : '') + '>‹</button>' +
+      pages +
+      '<button class="tx-page-btn" onclick="setPage(' + (currentPage + 1) + ')"' + (currentPage >= totalPages - 1 ? ' disabled' : '') + '>›</button>' +
+    '</div>';
+}
+
+function setPage(n) {
+  currentPage = n;
+  var base = getViewTxs();
+  renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
+}
+
+function setPageSize(n) {
+  pageSize    = n;
+  currentPage = 0;
   var base = getViewTxs();
   renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
 }
 function clearAllFilters() {
-  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; activeFlag = false; shownCount = PAGE_SIZE;
+  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; activeFlag = false; currentPage = 0;
   var s = document.getElementById('tx-search');
   if (s) { s.value = ''; document.getElementById('search-clear').style.display = 'none'; }
   var base = getViewTxs();
@@ -1692,7 +1740,7 @@ function doReset() {
   document.getElementById('file-input').value = '';
   allTx = []; revolutTx = []; hapoalimTx = [];
   activeSource = 'all';
-  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; shownCount = PAGE_SIZE;
+  activeCat = 'All'; activeDir = 'all'; activeSearch = ''; currentPage = 0;
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -1770,7 +1818,7 @@ function toggleFlag(idx, ev) {
 }
 function toggleFlagFilter() {
   activeFlag = !activeFlag;
-  shownCount = PAGE_SIZE;
+  currentPage = 0;
   var base = getViewTxs();
   renderFilters(base);
   renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
