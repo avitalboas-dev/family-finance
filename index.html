@@ -155,8 +155,9 @@
   .bar-out{background:var(--accent);opacity:0.8;}
   .month-group:hover .bar-in,.month-group:hover .bar-out{opacity:1;}
   .bar-stacked{flex:1;display:flex;flex-direction:column-reverse;align-items:stretch;position:relative;}
-  .bar-segment{min-height:2px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);}
+  .bar-segment{min-height:2px;transition:height 0.7s cubic-bezier(0.16,1,0.3,1);cursor:pointer;}
   .month-group:hover .bar-segment{filter:brightness(1.07);}
+  .bar-segment:hover{filter:brightness(0.88)!important;}
   .month-labels{display:flex;gap:6px;margin-top:8px;}
   .month-label{flex:1;font-size:10px;text-align:center;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;}
   .chart-legend{display:flex;gap:14px;margin-top:12px;}
@@ -1279,7 +1280,7 @@ function renderFlowGrouped(txs, cur) {
       if (!amt || flowCatFilter[cat] === false) continue;
       inTotal += amt;
       var segH = Math.max(2, Math.round(amt / maxVal * H));
-      inSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + inColor[cat] + ';opacity:0.85"></div>';
+      inSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + inColor[cat] + ';opacity:0.85" onclick="drillFromTrend(\'' + escAttr(key) + '\',\'' + escAttr(cat) + '\',\'in\')" title="' + escAttr(cat) + ' · ' + lbl + '"></div>';
       inTipRows += '<div style="color:' + inColor[cat] + '">' + escHtml(cat) + ' ' + fmtAmt(amt, cur) + '</div>';
     }
     var outSegs = '', outTipRows = '', outTotal = 0;
@@ -1288,7 +1289,7 @@ function renderFlowGrouped(txs, cur) {
       if (!amt || flowCatFilter[cat] === false) continue;
       outTotal += amt;
       var segH = Math.max(2, Math.round(amt / maxVal * H));
-      outSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + outColor[cat] + ';opacity:0.85"></div>';
+      outSegs    += '<div class="bar-segment" style="height:' + segH + 'px;background:' + outColor[cat] + ';opacity:0.85" onclick="drillFromTrend(\'' + escAttr(key) + '\',\'' + escAttr(cat) + '\',\'out\')" title="' + escAttr(cat) + ' · ' + lbl + '"></div>';
       outTipRows += '<div style="color:' + outColor[cat] + '">' + escHtml(cat) + ' ' + fmtAmt(amt, cur) + '</div>';
     }
 
@@ -1438,6 +1439,24 @@ function drillIntoTrend(cat) {
   for (var i = 0; i < keys.length; i++) flowCatFilter[keys[i]] = false;
   flowCatFilter[cat] = true;
   renderFlow(window._lastFlowTxs || [], window._lastFlowCur || '');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function drillFromTrend(month, cat, dir) {
+  var sel = document.getElementById('period-select');
+  sel.value = month;
+  if (!sel.value) sel.value = 'all';
+  document.getElementById('custom-range').style.display = 'none';
+  activeCat    = cat;
+  activeDir    = dir;
+  activeSearch = '';
+  currentPage  = 0;
+  switchTab('transactions');
+  var searchEl = document.getElementById('tx-search');
+  if (searchEl) { searchEl.value = ''; document.getElementById('search-clear').style.display = 'none'; }
+  var base = getViewTxs();
+  renderFilters(base);
+  renderTxs(applyFilters(base), (base[0] && base[0].currency) || 'EUR');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
