@@ -384,6 +384,10 @@
     <button class="src-btn" id="src-revolut" onclick="setSource('revolut')">Revolut</button>
     <button class="src-btn" id="src-hapoalim" onclick="setSource('hapoalim')">Hapoalim</button>
   </div>
+  <div id="header-file-btns" style="display:none;align-items:center;gap:6px;">
+    <button class="ghost-btn" onclick="document.getElementById('file-input').click()">+ Add bank file</button>
+    <button class="ghost-btn" onclick="doReset()">Clear data</button>
+  </div>
 </header>
 
 <div id="upload-section">
@@ -418,7 +422,8 @@
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn active" id="tab-btn-overview" onclick="switchTab('overview')">Overview<span class="tab-sub">categories &amp; transactions</span></button>
+    <button class="tab-btn active" id="tab-btn-overview" onclick="switchTab('overview')">Overview<span class="tab-sub">spending &amp; income</span></button>
+    <button class="tab-btn" id="tab-btn-transactions" onclick="switchTab('transactions')">Transactions<span class="tab-sub">full list &amp; filters</span></button>
     <button class="tab-btn" id="tab-btn-trends" onclick="switchTab('trends')">Trends<span class="tab-sub">monthly flow chart</span></button>
   </div>
 
@@ -436,14 +441,19 @@
         <div id="cat-income"></div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS TAB -->
+  <div id="tab-transactions" style="display:none" class="content-wrap">
+    <div class="main-grid">
+
       <div class="panel panel-full" id="tx-panel">
         <div class="tx-panel-header">
           <div class="panel-title" style="margin-bottom:0">Transactions</div>
           <div class="hdr-btns">
             <span class="sync-status" id="sync-status"></span>
             <button class="ghost-btn" id="trend-shortcut" style="display:none" onclick="drillIntoTrend(activeCat)">↗ View trend</button>
-            <button class="ghost-btn" onclick="document.getElementById('file-input').click()">+ Add bank file</button>
-            <button class="ghost-btn" onclick="doReset()">Clear data</button>
           </div>
         </div>
         <div class="tx-filters" id="tx-filters"></div>
@@ -1010,6 +1020,7 @@ function renderDashboard(txs) {
   document.getElementById('upload-section').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
   document.getElementById('date-controls').style.display = 'flex';
+  document.getElementById('header-file-btns').style.display = 'flex';
 }
 
 // ─── SPENDING BY CATEGORY ─────────────────────────────────────────────────────
@@ -1405,10 +1416,12 @@ function clearSearch() {
 
 function switchTab(tab) {
   activeTab = tab;
-  document.getElementById('tab-overview').style.display = tab === 'overview' ? 'block' : 'none';
-  document.getElementById('tab-trends').style.display   = tab === 'trends'   ? 'block' : 'none';
-  document.getElementById('tab-btn-overview').className = 'tab-btn' + (tab === 'overview' ? ' active' : '');
-  document.getElementById('tab-btn-trends').className   = 'tab-btn' + (tab === 'trends'   ? ' active' : '');
+  document.getElementById('tab-overview').style.display      = tab === 'overview'      ? 'block' : 'none';
+  document.getElementById('tab-transactions').style.display  = tab === 'transactions'  ? 'block' : 'none';
+  document.getElementById('tab-trends').style.display        = tab === 'trends'        ? 'block' : 'none';
+  document.getElementById('tab-btn-overview').className      = 'tab-btn' + (tab === 'overview'      ? ' active' : '');
+  document.getElementById('tab-btn-transactions').className  = 'tab-btn' + (tab === 'transactions'  ? ' active' : '');
+  document.getElementById('tab-btn-trends').className        = 'tab-btn' + (tab === 'trends'        ? ' active' : '');
 }
 
 function drillIntoTrend(cat) {
@@ -1426,14 +1439,14 @@ function drillInto(cat, dir) {
   activeDir    = dir || 'all';
   activeSearch = '';
   currentPage  = 0;
-  switchTab('overview');
+  switchTab('transactions');
   var searchEl = document.getElementById('tx-search');
   if (searchEl) { searchEl.value = ''; document.getElementById('search-clear').style.display = 'none'; }
   var base = getViewTxs();
   renderFilters(base);
   var subset = applyFilters(base);
   renderTxs(subset, (base[0] && base[0].currency) || 'EUR');
-  document.getElementById('tx-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ─── TRANSACTIONS TABLE ───────────────────────────────────────────────────────
@@ -1737,6 +1750,7 @@ function doReset() {
   document.getElementById('upload-section').style.display = 'flex';
   document.getElementById('date-controls').style.display = 'none';
   document.getElementById('source-controls').style.display = 'none';
+  document.getElementById('header-file-btns').style.display = 'none';
   document.getElementById('file-input').value = '';
   allTx = []; revolutTx = []; hapoalimTx = [];
   activeSource = 'all';
