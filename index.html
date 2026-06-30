@@ -458,6 +458,7 @@
           <div class="hdr-btns">
             <span class="sync-status" id="sync-status"></span>
             <button class="ghost-btn" id="trend-shortcut" style="display:none" onclick="drillIntoTrend(activeCat)">↗ View trend</button>
+            <button class="ghost-btn" onclick="exportTxsCsv()">↓ Export CSV</button>
           </div>
         </div>
         <div class="tx-filters" id="tx-filters"></div>
@@ -1760,6 +1761,30 @@ function pushCategoriesToGitHub() {
 }
 
 // ─── EXPORT / IMPORT OVERRIDES ────────────────────────────────────────────────
+function exportTxsCsv() {
+  var base = getViewTxs();
+  var rows = applyFilters(base).slice().sort(function(a, b) {
+    if (sortCol === 'date')     { return sortDir === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date); }
+    if (sortCol === 'desc')     { var av = a.desc.toLowerCase(), bv = b.desc.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    if (sortCol === 'category') { var av = a.category.toLowerCase(), bv = b.category.toLowerCase(); return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    if (sortCol === 'amount')   { return sortDir === 'desc' ? b.amount - a.amount : a.amount - b.amount; }
+    return 0;
+  });
+  if (!rows.length) { alert('No transactions to export.'); return; }
+  function cell(v) {
+    v = String(v == null ? '' : v);
+    return (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0)
+      ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  var lines = ['Date,Description,Category,Amount,Currency'];
+  for (var i = 0; i < rows.length; i++) {
+    var t = rows[i];
+    lines.push([cell(t.date.slice(0,10)), cell(t.desc), cell(t.category), cell(t.amount.toFixed(2)), cell(t.currency || '')].join(','));
+  }
+  var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'transactions.csv'; a.click();
+}
+
 function exportOverrides() {
   var keys = Object.keys(catOverrides);
   if (keys.length === 0) { alert('No custom category edits to export yet.'); return; }
