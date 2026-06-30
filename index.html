@@ -912,12 +912,7 @@ function setSource(src) {
     if (btn) btn.classList.toggle('active', s === src);
   });
   activeCat = 'All'; activeDir = 'all'; activeSearch = ''; currentPage = 0;
-  var viewTxs = getViewTxs();
-  var savedPeriod = document.getElementById('period-select').value;
-  buildPeriodPicker(viewTxs.length ? viewTxs : allTx);
-  var sel = document.getElementById('period-select');
-  sel.value = savedPeriod;
-  if (!sel.value) sel.value = '3m';
+  buildPeriodPicker(allTx);
   renderDashboard(getViewTxs());
 }
 
@@ -952,6 +947,7 @@ function buildPeriodPicker(txs) {
   var months = Object.keys(seen).sort().reverse();
 
   var sel = document.getElementById('period-select');
+  var prev = sel.value;
   sel.innerHTML = '<option value="all">All time</option>' +
     '<option value="3m">Last 3 months</option>' +
     '<option value="6m">Last 6 months</option>' +
@@ -964,7 +960,8 @@ function buildPeriodPicker(txs) {
     opt.textContent = label;
     sel.appendChild(opt);
   }
-  sel.value = months[0] || '3m';
+  sel.value = prev;
+  if (!sel.value) sel.value = '6m';
 
 }
 
