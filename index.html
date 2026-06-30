@@ -1866,7 +1866,7 @@ function escHtml(s) {
 }
 
 function escAttr(s) {
-  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return String(s).replace(/\\/g,'\\\\').replace(/"/g,'&quot;').replace(/'/g,"\\'");
 }
 
 function sortEntries(obj) {
