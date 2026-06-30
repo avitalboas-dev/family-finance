@@ -616,6 +616,7 @@ try {
   } catch(ignore) {}
   allTx = revolutTx.concat(hapoalimTx);
   if (!allTx.length) return;
+  try { bootstrapCustomCats(); } catch(ignore) {}
   try {
     updateSourceFilter();
     buildPeriodPicker(allTx);
@@ -636,6 +637,20 @@ function persistCustomCats() {
       r: ALL_CATS.filter(function(c) { return BASE_R.indexOf(c) === -1; })
     }));
   } catch(ignore) {}
+}
+
+function bootstrapCustomCats() {
+  var keyToSource = {};
+  for (var i = 0; i < allTx.length; i++) keyToSource[allTx[i].key] = allTx[i].source;
+  var keys = Object.keys(catOverrides);
+  var changed = false;
+  for (var j = 0; j < keys.length; j++) {
+    var cat = catOverrides[keys[j]];
+    var src = keyToSource[keys[j]];
+    if (src === 'hapoalim' && HAPOALIM_CATS.indexOf(cat) === -1) { HAPOALIM_CATS.push(cat); changed = true; }
+    else if (src !== 'hapoalim' && ALL_CATS.indexOf(cat) === -1) { ALL_CATS.push(cat); changed = true; }
+  }
+  if (changed) persistCustomCats();
 }
 
 (function loadCategories() {
