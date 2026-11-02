@@ -1,8 +1,12 @@
 # Family Finance
 
-A lightweight, single-page finance tracker for Revolut and Bank Hapoalim exports. No accounts, no backend — runs entirely in your browser.
+A lightweight, single-page finance tracker for Revolut and Bank Hapoalim exports. No accounts and no server of its own: your transactions stay in your browser.
 
 **Live app → [avitalboas-dev.github.io/family-finance](https://avitalboas-dev.github.io/family-finance/)**
+
+![Spending by category](docs/screenshots/overview.png)
+
+<sub>Screenshots use made-up demo data.</sub>
 
 ---
 
@@ -26,6 +30,8 @@ A lightweight, single-page finance tracker for Revolut and Bank Hapoalim exports
 - Monthly flow chart showing income vs. spending over time
 - Category trend chart — month-by-month spending for a selected category
 
+![Money flow over time](docs/screenshots/trends.png)
+
 **Transactions tab**
 - Full sortable table — click any column header to sort by date, description, category, or amount
 - Direction filter: All / ↑ In / ↓ Out
@@ -40,6 +46,8 @@ A lightweight, single-page finance tracker for Revolut and Bank Hapoalim exports
 - Period selector (last 3 months default; also last 6 months, all time, individual months, custom range) — always on the far right
 - Source switcher (All / Revolut / Hapoalim) — period selection is preserved when switching
 - **+ Add bank file** and **Clear data** — visible after first upload
+
+![Transactions table](docs/screenshots/transactions.png)
 
 ---
 
@@ -60,6 +68,10 @@ A lightweight, single-page finance tracker for Revolut and Bank Hapoalim exports
 | Category mappings | [JSONBin.io](https://jsonbin.io) | Shared — syncs automatically across all devices |
 
 Category edits save to JSONBin instantly on every change and are loaded on startup. No manual export needed.
+
+**Privacy:** your bank files are read in the browser and never uploaded. Only category mappings (a merchant name and the category you chose for it) are sent to JSONBin.
+
+**About the hosted app:** the live version syncs category edits to the author's own JSONBin store, so changes made there are shared with that store. To keep your categories to yourself, fork the repo and point `index.html` at your own JSONBin bin (search for `jsonbin`), or run it locally.
 
 ---
 
